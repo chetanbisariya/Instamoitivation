@@ -24,7 +24,7 @@ class VideoEngine:
         
         fonts = {}
         try:
-            fonts["badge"] = ImageFont.truetype(str(inter_path), 26)
+            fonts["badge"] = ImageFont.truetype(str(inter_path), 25)
             fonts["quote_large"] = ImageFont.truetype(str(anton_path), 66)
             fonts["quote_medium"] = ImageFont.truetype(str(anton_path), 54)
             fonts["author"] = ImageFont.truetype(str(inter_path), 32)
@@ -38,14 +38,15 @@ class VideoEngine:
         return fonts
 
     def _preload_avatars(self) -> dict:
-        """Preloads and circularly crops all avatar portraits."""
+        """Preloads and circularly crops all avatar portraits including custom uploads."""
         avatars = {}
         size = (150, 150)
         mask = Image.new("L", size, 0)
         draw = ImageDraw.Draw(mask)
         draw.ellipse((0, 0, size[0], size[1]), fill=255)
 
-        for av_key, av_info in Config.AVATARS.items():
+        all_avatars = Config.get_avatars()
+        for av_key, av_info in all_avatars.items():
             av_path = Config.AVATARS_DIR / av_info["file"]
             if av_path.exists():
                 try:
@@ -56,6 +57,14 @@ class VideoEngine:
                 except Exception as e:
                     print(f"[VideoEngine] Error loading avatar {av_key}: {e}")
         return avatars
+
+    def get_avatar_image(self, avatar_key: str) -> Image.Image | None:
+        """Dynamically retrieves avatar, loading newly uploaded ones if not yet cached."""
+        if not avatar_key or avatar_key.lower() == "none":
+            return None
+        if avatar_key not in self.avatar_cache:
+            self.avatar_cache = self._preload_avatars()
+        return self.avatar_cache.get(avatar_key, None)
 
     def _create_base_background(self) -> Image.Image:
         img = Image.new("RGB", (self.width, self.height), (10, 11, 15))
@@ -118,14 +127,11 @@ class VideoEngine:
         frame = self.bg_base.copy()
         draw = ImageDraw.Draw(frame)
 
-        # Get category accent color
         cat_info = Config.CATEGORIES.get(category, Config.CATEGORIES["MOTIVATION"])
         accent_rgb = cat_info["accent_rgb"]
-
-        # Calculate average audio energy for this frame (for avatar aura pulsing)
         avg_energy = float(np.mean(visualizer_bars)) if len(visualizer_bars) > 0 else 0.0
 
-        # Dynamic ambient center glow tinted with category accent
+        # Dynamic ambient center glow
         center_x, center_y = self.width // 2, int(self.height * 0.46)
         glow = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
         glow_draw = ImageDraw.Draw(glow)
@@ -140,21 +146,23 @@ class VideoEngine:
         frame.paste(glow, (0, 0), glow)
 
         # 1. Narrator Avatar (Center-Top with Audio-Reactive Pulsing Aura)
-        avatar_img = self.avatar_cache.get(avatar_key, None) if avatar_key else None
+        avatar_img = self.get_avatar_image(avatar_key)
         show_avatar = avatar_img is not None and Config.SHOW_AVATAR
         
+        all_avatars = Config.get_avatars()
+        character_name = all_avatars.get(avatar_key, {}).get("name", "Storyteller") if avatar_key else "Storyteller"
+
         if show_avatar:
             av_cx, av_cy = self.width // 2, 220
             av_radius = 75
             
             # Draw Audio-Reactive Glowing Aura Ring
-            pulse_extra = int(avg_energy * 18) # Expands with voice
+            pulse_extra = int(avg_energy * 20)
             aura_radius = av_radius + 6 + pulse_extra
             aura_layer = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
             aura_draw = ImageDraw.Draw(aura_layer)
             
-            # Outer soft glow
-            aura_alpha = int(90 + avg_energy * 140)
+            aura_alpha = int(95 + avg_energy * 145)
             aura_draw.ellipse(
                 [av_cx - aura_radius, av_cy - aura_radius, av_cx + aura_radius, av_cy + aura_radius],
                 fill=(accent_rgb[0], accent_rgb[1], accent_rgb[2], aura_alpha)
@@ -167,17 +175,18 @@ class VideoEngine:
             av_y = av_cy - av_radius
             frame.paste(avatar_img, (av_x, av_y), avatar_img)
 
-            # Crisp border ring around avatar
+            # Crisp border ring
             draw.ellipse([av_x - 1, av_y - 1, av_x + 151, av_y + 151], outline=accent_rgb, width=3)
 
-            # Category / Speaker Pill Badge below Avatar
+            # Narrator Tag below Avatar
             badge_cy = 330
+            badge_text = f"•  {character_name.upper()} • {topic.upper()}  •"
         else:
             badge_cy = 230
+            cat_tagline = cat_info.get("tagline", category)
+            badge_text = f"•  {cat_tagline} : {topic.upper()}  •"
 
-        # 2. Topic / Category Badge
-        cat_tagline = cat_info.get("tagline", category)
-        badge_text = f"•  {cat_tagline} : {topic.upper()}  •"
+        # 2. Topic / Character Badge
         badge_font = self.fonts["badge"]
         b_box = draw.textbbox((0, 0), badge_text, font=badge_font)
         bw, bh = b_box[2] - b_box[0], b_box[3] - b_box[1]
@@ -188,7 +197,7 @@ class VideoEngine:
         draw.rounded_rectangle(badge_rect, radius=22, fill=(22, 26, 36), outline=(50, 60, 80), width=2)
         draw.text((badge_cx - bw // 2, badge_cy), badge_text, font=badge_font, fill=(225, 232, 245))
 
-        # 3. Kinetic Typography (Active words illuminate with category accent color)
+        # 3. Hero Kinetic Typography
         quote_start_y = 440 if show_avatar else 420
         start_y = quote_start_y + max(0, (520 - total_text_height) // 2)
         y = start_y
@@ -218,17 +227,13 @@ class VideoEngine:
                     is_past = True
 
                 if is_active:
-                    # Active word in radiant category accent color
                     fill_color = accent_rgb
-                    # Soft shadow
                     draw.text((x + 2, y + 2), word, font=quote_font, fill=(accent_rgb[0] // 3, accent_rgb[1] // 3, accent_rgb[2] // 3))
                     draw.text((x, y), word, font=quote_font, fill=fill_color)
                 elif is_past:
-                    # Clean high-contrast white
                     fill_color = (248, 250, 252)
                     draw.text((x, y), word, font=quote_font, fill=fill_color)
                 else:
-                    # Muted upcoming words
                     fill_color = (78, 88, 106)
                     draw.text((x, y), word, font=quote_font, fill=fill_color)
 
@@ -252,7 +257,6 @@ class VideoEngine:
             by1 = viz_center_y - bar_h // 2
             by2 = viz_center_y + bar_h // 2
 
-            # Blend center bars towards accent color, edge bars towards crisp white
             dist_from_center = abs(i - num_bars / 2) / (num_bars / 2)
             r = int(accent_rgb[0] * (1 - dist_from_center) + 235 * dist_from_center)
             g = int(accent_rgb[1] * (1 - dist_from_center) + 242 * dist_from_center)
@@ -260,8 +264,9 @@ class VideoEngine:
 
             draw.rounded_rectangle([bx, by1, bx + bar_w, by2], radius=4, fill=(r, g, b))
 
-        # 5. Author Attribution
-        author_text = f"—  {author.upper()}  —"
+        # 5. Author / Narrator Attribution
+        attribution_str = author if author else character_name
+        author_text = f"—  {attribution_str.upper()}  —"
         author_font = self.fonts["author"]
         a_box = draw.textbbox((0, 0), author_text, font=author_font)
         aw = a_box[2] - a_box[0]
@@ -311,7 +316,6 @@ class VideoEngine:
 
         visualizer = AudioSpectrumVisualizer(audio_file, num_bars=42, fps=self.fps)
 
-        # Typography layout
         words = script_data["script"].split()
         quote_font = self.fonts["quote_large"] if len(words) <= 22 else self.fonts["quote_medium"]
         max_text_width = 860
@@ -326,7 +330,6 @@ class VideoEngine:
         cat = category.upper() if category.upper() in Config.CATEGORIES else "MOTIVATION"
         cat_info = Config.CATEGORIES[cat]
 
-        # Category soundtrack selection
         if not bg_music_path:
             bg_music = str(Config.MUSIC_DIR / cat_info.get("music_file", "cinematic_ambient_drone.wav"))
         else:
@@ -395,7 +398,7 @@ class VideoEngine:
                 total_frames=total_frames,
                 current_time=cur_time,
                 topic=script_data.get("topic", "STORIES"),
-                author=script_data.get("author", "Narrator"),
+                author=script_data.get("author", "Storyteller"),
                 category=cat,
                 avatar_key=avatar_key,
                 word_lines=word_lines,

@@ -17,11 +17,15 @@
                 <span class="logo-icon">⚡</span>
                 <div class="logo-text">
                     <span class="logo-title">INSTA STORY & REEL AGENT</span>
-                    <span class="logo-sub">Autonomous Multi-Genre Stories, Avatars & Daily Scheduler</span>
+                    <span class="logo-sub">Autonomous Multi-Genre Stories, Custom Avatars & Daily Scheduler</span>
                 </div>
             </div>
         </div>
         <div class="header-right">
+            <button class="btn-creator-lab" id="openCreatorLabBtn">
+                <span class="btn-sparkle">✨</span>
+                Upload Character & Voice
+            </button>
             <div class="status-indicator" id="agentStatusBadge">
                 <span class="status-pulse"></span>
                 <span id="agentStatusText">System Active</span>
@@ -93,71 +97,26 @@
 
                 <!-- 2. Avatar Selection -->
                 <div class="form-group">
-                    <label class="form-label">2. Select Narrator Avatar</label>
-                    <div class="avatars-picker" id="avatarsPickerContainer">
-                        <div class="avatar-card active" data-avatar="female_innocent">
-                            <img src="/avatars/female_innocent.jpg" alt="Ava" class="avatar-thumb">
-                            <div class="avatar-info">
-                                <span class="avatar-name">Ava</span>
-                                <span class="avatar-desc">Innocent & Natural</span>
-                            </div>
-                        </div>
-                        <div class="avatar-card" data-avatar="male_innocent">
-                            <img src="/avatars/male_innocent.jpg" alt="Lucas" class="avatar-thumb">
-                            <div class="avatar-info">
-                                <span class="avatar-name">Lucas</span>
-                                <span class="avatar-desc">Innocent & Sincere</span>
-                            </div>
-                        </div>
-                        <div class="avatar-card" data-avatar="female_poetic">
-                            <img src="/avatars/female_poetic.jpg" alt="Elena" class="avatar-thumb">
-                            <div class="avatar-info">
-                                <span class="avatar-name">Elena</span>
-                                <span class="avatar-desc">Poetic Storyteller</span>
-                            </div>
-                        </div>
-                        <div class="avatar-card" data-avatar="male_adventurer">
-                            <img src="/avatars/male_adventurer.jpg" alt="Leo" class="avatar-thumb">
-                            <div class="avatar-info">
-                                <span class="avatar-name">Leo</span>
-                                <span class="avatar-desc">Mountain Explorer</span>
-                            </div>
-                        </div>
-                        <div class="avatar-card" data-avatar="none">
-                            <div class="avatar-thumb avatar-none-thumb">🚫</div>
-                            <div class="avatar-info">
-                                <span class="avatar-name">Minimal</span>
-                                <span class="avatar-desc">Waveform Only</span>
-                            </div>
-                        </div>
+                    <div class="label-with-action">
+                        <label class="form-label">2. Select Narrator Character</label>
+                        <button class="btn-link" id="quickAddAvatarBtn">+ Upload Character</button>
                     </div>
+                    <div class="avatars-picker" id="avatarsPickerContainer"></div>
                 </div>
 
                 <!-- 3. Voice Selection -->
                 <div class="form-group">
-                    <label for="voiceSelect" class="form-label">3. Select Narrator Voice</label>
-                    <select id="voiceSelect" class="form-input">
-                        <optgroup label="Female / Girl Voices">
-                            <option value="ava_female" selected>Ava — Gentle, Innocent & Sweet Girl Voice</option>
-                            <option value="emma_female">Emma — Expressive & Poetic Female Voice</option>
-                            <option value="jenny_female">Jenny — Cheerful & Storytelling Female Voice</option>
-                            <option value="sonia_female">Sonia — Elegant British Female Voice</option>
-                        </optgroup>
-                        <optgroup label="Male Voices">
-                            <option value="brian_male">Brian — Kind, Innocent & Gentle Male Voice</option>
-                            <option value="andrew_male">Andrew — Youthful & Adventurous Male Voice</option>
-                            <option value="christopher_male">Christopher — Deep, Authoritative Cinematic Voice</option>
-                            <option value="ryan_male">Ryan — Thoughtful British Male Narrator</option>
-                        </optgroup>
-                    </select>
+                    <div class="label-with-action">
+                        <label for="voiceSelect" class="form-label">3. Select Narrator Voice</label>
+                        <button class="btn-link" id="quickAddVoiceBtn">+ Upload / Clone Voice</button>
+                    </div>
+                    <select id="voiceSelect" class="form-input"></select>
                 </div>
 
                 <!-- 4. Story Theme / Presets -->
                 <div class="form-group">
                     <label class="form-label">4. Story Concept / Premise</label>
-                    <div class="topic-chips" id="topicChipsContainer">
-                        <!-- Populated dynamically based on category -->
-                    </div>
+                    <div class="topic-chips" id="topicChipsContainer"></div>
                 </div>
 
                 <div class="form-group">
@@ -223,6 +182,124 @@
         </div>
         <div class="reels-grid" id="reelsGrid"></div>
     </section>
+
+    <!-- Creator Lab Modal (Upload Character & Voice) -->
+    <div class="modal-backdrop" id="creatorLabModal" style="display: none;">
+        <div class="modal-dialog modal-dialog-lg">
+            <div class="modal-header">
+                <h3>✨ Creator Lab — Custom Characters & Voice Upload</h3>
+                <button class="modal-close-btn" id="closeCreatorLabBtn">&times;</button>
+            </div>
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="uploadAvatarTab">Upload Character Avatar</button>
+                <button class="modal-tab" data-tab="uploadVoiceTab">Upload Voice / Clone</button>
+                <button class="modal-tab" data-tab="directAudioTab">Spoken Voice Narration Reel</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Tab 1: Upload Avatar -->
+                <div id="uploadAvatarTab" class="lab-tab-content active">
+                    <form id="avatarUploadForm">
+                        <div class="form-group">
+                            <label class="form-label">Character Portrait Image (JPG/PNG)</label>
+                            <div class="upload-dropzone" id="avatarDropzone">
+                                <input type="file" id="avatarFileInput" accept="image/png, image/jpeg, image/webp" style="display: none;">
+                                <div class="dropzone-content" id="avatarDropzoneContent">
+                                    <span class="dropzone-icon">📷</span>
+                                    <p class="dropzone-text">Click or drag character portrait here</p>
+                                    <span class="dropzone-sub">Square or portrait close-up recommended</span>
+                                </div>
+                                <div class="dropzone-preview" id="avatarPreviewContainer" style="display: none;">
+                                    <img id="avatarPreviewImg" src="" alt="Preview">
+                                    <span class="change-file-btn">Change Photo</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customAvatarName" class="form-label">Character Name</label>
+                            <input type="text" id="customAvatarName" class="form-input" placeholder="e.g. Aria, Viktor, Sensei Kael" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customAvatarRole" class="form-label">Role / Persona</label>
+                            <input type="text" id="customAvatarRole" class="form-input" placeholder="e.g. Innocent Storyteller, Cyber Monk, Adventurer">
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="submitAvatarBtn" style="width: 100%;">
+                            <span>Save & Register Character</span>
+                        </button>
+                        <div id="avatarUploadMsg" class="dispatch-msg"></div>
+                    </form>
+                </div>
+
+                <!-- Tab 2: Upload Voice -->
+                <div id="uploadVoiceTab" class="lab-tab-content">
+                    <form id="voiceUploadForm">
+                        <div class="form-group">
+                            <label class="form-label">Voice Sample Audio File (MP3 / WAV / M4A)</label>
+                            <input type="file" id="voiceFileInput" class="form-input" accept="audio/*" required>
+                            <small class="form-help">Upload a clear 30-60 second speech recording with minimal background noise.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customVoiceName" class="form-label">Voice Display Name</label>
+                            <input type="text" id="customVoiceName" class="form-input" placeholder="e.g. My Studio Voice, Elena Sweet Tone" required>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="cloneInElevenLabs">
+                                <label for="cloneInElevenLabs">Clone this voice with ElevenLabs Instant Voice Cloning (Requires ElevenLabs Key)</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="submitVoiceBtn" style="width: 100%;">
+                            <span>Save & Register Voice</span>
+                        </button>
+                        <div id="voiceUploadMsg" class="dispatch-msg"></div>
+                    </form>
+                </div>
+
+                <!-- Tab 3: Spoken Voice Narration Reel -->
+                <div id="directAudioTab" class="lab-tab-content">
+                    <form id="directAudioForm">
+                        <div class="form-group">
+                            <label class="form-label">Your Recorded Story Audio (MP3 / WAV)</label>
+                            <input type="file" id="directAudioFile" class="form-input" accept="audio/*" required>
+                            <small class="form-help">Your own voice recording speaking the story!</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="directAudioScript" class="form-label">Story Script / Spoken Words</label>
+                            <textarea id="directAudioScript" rows="3" class="form-input" placeholder="Type or paste the words you spoke in the recording..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="directAudioCategory" class="form-label">Story Category</label>
+                            <select id="directAudioCategory" class="form-input">
+                                <option value="ROMANTIC">Romantic & Poetic</option>
+                                <option value="ADVENTURE">Storytelling & Adventure</option>
+                                <option value="THRILLER">Thriller & Suspense</option>
+                                <option value="MOTIVATION">Daily Discipline & Motivation</option>
+                                <option value="WISDOM">Life Wisdom</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="directAudioTopic" class="form-label">Story Title / Hook</label>
+                            <input type="text" id="directAudioTopic" class="form-input" placeholder="e.g. A MEMORY IN THE RAIN">
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="submitDirectAudioBtn" style="width: 100%;">
+                            <span>⚡ Render Reel with My Spoken Voice</span>
+                        </button>
+                        <div id="directAudioMsg" class="dispatch-msg"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Automation Settings Modal -->
     <div class="modal-backdrop" id="settingsModal" style="display: none;">

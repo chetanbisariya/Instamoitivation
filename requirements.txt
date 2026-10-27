@@ -23,6 +23,7 @@ pydantic==2.14.1
 pydantic_core==2.50.1
 pydub==0.25.1
 python-dotenv==1.2.4
+python-multipart==0.0.32
 requests==2.34.2
 schedule==1.2.2
 scipy==1.18.1

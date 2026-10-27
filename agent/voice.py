@@ -20,22 +20,94 @@ class VoiceSynthesizer:
 
     @classmethod
     def resolve_voice_ids(cls, voice_key: str = None) -> tuple[str, str, str]:
-        """
-        Resolves voice_key into (edge_voice_id, eleven_voice_id, display_name).
-        """
-        if not voice_key or voice_key not in Config.VOICES:
-            # Default fallback
+        all_voices = Config.get_voices()
+        if not voice_key or voice_key not in all_voices:
             voice_key = "ava_female" if "girl" in str(voice_key).lower() or "female" in str(voice_key).lower() else "christopher_male"
             
-        voice_info = Config.VOICES.get(voice_key, Config.VOICES["christopher_male"])
-        edge_id = voice_info["edge_id"]
-        eleven_id = voice_info["eleven_id"]
-        name = voice_info["name"]
+        voice_info = all_voices.get(voice_key, all_voices.get("christopher_male", {}))
+        edge_id = voice_info.get("edge_id", "en-US-ChristopherNeural")
+        eleven_id = voice_info.get("eleven_id", "pNInz6obpgDQGcFmaJgB")
+        name = voice_info.get("name", "Neural Voice")
         return edge_id, eleven_id, name
 
     @classmethod
+    def clone_voice_with_elevenlabs(cls, name: str, audio_file_path: str, description: str = "") -> dict:
+        """
+        Uses ElevenLabs Instant Voice Cloning API to clone a voice from an uploaded audio sample.
+        """
+        api_key = Config.ELEVENLABS_API_KEY
+        if not api_key:
+            return {
+                "success": False,
+                "message": "ElevenLabs API key is not configured. Please set ELEVENLABS_API_KEY in settings to clone voices."
+            }
+
+        url = "https://api.elevenlabs.io/v1/voices/add"
+        headers = {"xi-api-key": api_key}
+        
+        try:
+            with open(audio_file_path, "rb") as af:
+                files = [("files", (Path(audio_file_path).name, af, "audio/mpeg"))]
+                data = {
+                    "name": name,
+                    "description": description or f"Custom cloned voice for {name}"
+                }
+                res = requests.post(url, headers=headers, data=data, files=files, timeout=60)
+                
+            if res.status_code in [200, 201]:
+                voice_data = res.json()
+                voice_id = voice_data.get("voice_id")
+                return {
+                    "success": True,
+                    "voice_id": voice_id,
+                    "message": f"Voice '{name}' cloned successfully in ElevenLabs! Voice ID: {voice_id}"
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": f"ElevenLabs cloning error: {res.status_code} - {res.text}"
+                }
+        except Exception as e:
+            return {"success": False, "message": f"Voice cloning exception: {str(e)}"}
+
+    @classmethod
+    def process_direct_audio(cls, audio_file_path: str, script_text: str = "") -> dict:
+        """
+        Processes a user-uploaded spoken voice recording directly without TTS.
+        Calculates audio duration and builds word-level alignment pacing.
+        """
+        duration = cls.get_audio_duration(audio_file_path)
+        words = script_text.split() if script_text else ["Spoken", "Narration"]
+        
+        word_timings = []
+        pad_start = 0.3
+        pad_end = 0.4
+        effective_dur = max(duration - pad_start - pad_end, 1.0)
+        total_chars = sum(len(w) for w in words)
+        curr_time = pad_start
+        
+        for w in words:
+            word_dur = (len(w) / max(total_chars, 1)) * effective_dur
+            word_dur = max(word_dur, 0.20)
+            word_timings.append({
+                "word": w,
+                "start": curr_time,
+                "end": curr_time + word_dur
+            })
+            curr_time += word_dur + 0.04
+
+        return {
+            "audio_path": audio_file_path,
+            "duration": duration,
+            "provider": "User Custom Audio",
+            "voice_key": "user_uploaded",
+            "voice_name": "Custom Uploaded Voice",
+            "word_timings": word_timings,
+            "word_count": len(words)
+        }
+
+    @classmethod
     def synthesize_with_elevenlabs(cls, text: str, output_path: str, voice_id: str = None) -> tuple[bool, str, list]:
-        """Synthesizes speech using ElevenLabs API."""
         api_key = Config.ELEVENLABS_API_KEY
         if not api_key:
             return False, "ELEVENLABS_API_KEY is not set.", []
@@ -68,7 +140,6 @@ class VoiceSynthesizer:
                 with open(output_path, "wb") as f:
                     f.write(audio_bytes)
                 
-                # Extract word timestamps if alignment is provided
                 word_timings = []
                 alignment = data.get("alignment", {})
                 chars = alignment.get("characters", [])
@@ -121,7 +192,6 @@ class VoiceSynthesizer:
 
     @classmethod
     def synthesize_with_edge_tts(cls, text: str, output_path: str, voice: str = None) -> tuple[bool, str, list]:
-        """High quality neural TTS using Microsoft Edge neural voice."""
         voice_name = voice or Config.FALLBACK_TTS_VOICE or "en-US-AvaNeural"
         try:
             asyncio.run(cls._async_edge_tts(text, output_path, voice_name))
@@ -131,9 +201,6 @@ class VoiceSynthesizer:
 
     @classmethod
     def generate_voiceover(cls, text: str, output_path: str, voice_key: str = None) -> dict:
-        """
-        Synthesizes voiceover based on voice_key, measuring duration and timing.
-        """
         clean_text = cls.clean_text_for_speech(text)
         words = clean_text.split()
         
@@ -146,10 +213,9 @@ class VoiceSynthesizer:
             success, msg, word_timings = cls.synthesize_with_elevenlabs(clean_text, output_path, voice_id=eleven_id)
         
         if not success:
-            provider = f"Edge-TTS ({display_name})"
+            provider = f"Neural Voice ({display_name})"
             success, msg, word_timings = cls.synthesize_with_edge_tts(clean_text, output_path, voice=edge_id)
             if not success:
-                # Ultimate fallback
                 fallback_v = "en-US-ChristopherNeural"
                 success, msg, word_timings = cls.synthesize_with_edge_tts(clean_text, output_path, voice=fallback_v)
                 if not success:
@@ -157,7 +223,6 @@ class VoiceSynthesizer:
 
         duration = cls.get_audio_duration(output_path)
         
-        # Proportional word pacing if alignment timestamps not available
         if not word_timings and words:
             pad_start = 0.35
             pad_end = 0.45
@@ -196,12 +261,3 @@ class VoiceSynthesizer:
             h, m, s = match.groups()
             return int(h) * 3600 + int(m) * 60 + float(s)
         return 15.0
-
-if __name__ == "__main__":
-    out_f = str(Config.OUTPUT_DIR / "test_girl_voice.mp3")
-    res = VoiceSynthesizer.generate_voiceover(
-        "Close your eyes and breathe. Somewhere between the quiet mountains and the night sky, destiny is waiting for you.",
-        out_f,
-        voice_key="ava_female"
-    )
-    print("Girl voice synthesis test:", res["provider"], f"Duration: {res['duration']:.2f}s")

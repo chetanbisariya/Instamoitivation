@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -12,20 +13,23 @@ class Config:
     FONTS_DIR = ASSETS_DIR / "fonts"
     MUSIC_DIR = ASSETS_DIR / "music"
     AVATARS_DIR = ASSETS_DIR / "avatars"
+    UPLOADS_DIR = ASSETS_DIR / "uploads"
+    CUSTOM_AVATARS_FILE = ASSETS_DIR / "custom_characters.json"
+    CUSTOM_VOICES_FILE = ASSETS_DIR / "custom_voices.json"
     
     # Instagram & Branding
     INSTAGRAM_HANDLE = os.getenv("INSTAGRAM_HANDLE", "@stoic.discipline.daily")
-    DEFAULT_CATEGORY = os.getenv("DEFAULT_CATEGORY", "MOTIVATION")
-    DEFAULT_TOPIC = os.getenv("DEFAULT_TOPIC", "DAILY DISCIPLINE")
+    DEFAULT_CATEGORY = os.getenv("DEFAULT_CATEGORY", "ROMANTIC")
+    DEFAULT_TOPIC = os.getenv("DEFAULT_TOPIC", "MIDNIGHT CONFESSIONS")
     
     # ElevenLabs TTS Settings
     ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
-    ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "pNInz6obpgDQGcFmaJgB")
+    ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
     ELEVENLABS_MODEL_ID = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
     
     # Default Fallback Voice (Free Neural Voice)
-    DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "en-US-ChristopherNeural")
-    FALLBACK_TTS_VOICE = os.getenv("FALLBACK_TTS_VOICE", "en-US-ChristopherNeural")
+    DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "ava_female")
+    FALLBACK_TTS_VOICE = os.getenv("FALLBACK_TTS_VOICE", "en-US-AvaNeural")
     
     # Content Generation
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -47,93 +51,91 @@ class Config:
     DEFAULT_AVATAR = os.getenv("DEFAULT_AVATAR", "female_innocent")
     SHOW_AVATAR = os.getenv("SHOW_AVATAR", "true").lower() == "true"
 
-    # Supported Neural Voices (Female & Male)
-    VOICES = {
-        # Female Voices
+    # Base Supported Neural Voices (Female & Male)
+    _BASE_VOICES = {
         "ava_female": {
             "name": "Ava (Gentle & Innocent)",
             "gender": "Female",
             "edge_id": "en-US-AvaNeural",
-            "eleven_id": "21m00Tcm4TlvDq8ikWAM", # Rachel
+            "eleven_id": "21m00Tcm4TlvDq8ikWAM",
             "description": "Warm, innocent, sweet, conversational female tone"
         },
         "emma_female": {
             "name": "Emma (Expressive & Warm)",
             "gender": "Female",
             "edge_id": "en-US-EmmaNeural",
-            "eleven_id": "EXAVITQu4vr4xnSDxMaL", # Bella
+            "eleven_id": "EXAVITQu4vr4xnSDxMaL",
             "description": "Heartfelt, emotive, poetic female narrator"
         },
         "jenny_female": {
             "name": "Jenny (Crisp & Cheerful)",
             "gender": "Female",
             "edge_id": "en-US-JennyNeural",
-            "eleven_id": "AZnzlk1XvdvUeBnXmlld", # Domi
+            "eleven_id": "AZnzlk1XvdvUeBnXmlld",
             "description": "Energetic, clear, storytelling female voice"
         },
         "sonia_female": {
             "name": "Sonia (British Elegance)",
             "gender": "Female",
             "edge_id": "en-GB-SoniaNeural",
-            "eleven_id": "ThT5KcBeYPX3keUQqHPh", # Dorothy
+            "eleven_id": "ThT5KcBeYPX3keUQqHPh",
             "description": "Sophisticated, serene British female storyteller"
         },
-        # Male Voices
         "brian_male": {
             "name": "Brian (Kind & Innocent)",
             "gender": "Male",
             "edge_id": "en-US-BrianNeural",
-            "eleven_id": "ErXwobaYiN019PkySvjV", # Antoni
+            "eleven_id": "ErXwobaYiN019PkySvjV",
             "description": "Kind, sincere, gentle, approachable male voice"
         },
         "andrew_male": {
             "name": "Andrew (Youthful & Adventurous)",
             "gender": "Male",
             "edge_id": "en-US-AndrewNeural",
-            "eleven_id": "TxGEqnHWrfWFTfGW9XjX", # Josh
+            "eleven_id": "TxGEqnHWrfWFTfGW9XjX",
             "description": "Youthful, dynamic, confident explorer"
         },
         "christopher_male": {
             "name": "Christopher (Deep & Cinematic)",
             "gender": "Male",
             "edge_id": "en-US-ChristopherNeural",
-            "eleven_id": "pNInz6obpgDQGcFmaJgB", # Adam
+            "eleven_id": "pNInz6obpgDQGcFmaJgB",
             "description": "Authoritative, deep, grounding cinematic voice"
         },
         "ryan_male": {
             "name": "Ryan (British Storyteller)",
             "gender": "Male",
             "edge_id": "en-GB-RyanNeural",
-            "eleven_id": "VR6AewLTigWG4xSOukaG", # Arnold
+            "eleven_id": "VR6AewLTigWG4xSOukaG",
             "description": "Thoughtful, atmospheric British narrator"
         }
     }
 
-    # Supported Avatars
-    AVATARS = {
+    # Base Supported Avatars
+    _BASE_AVATARS = {
         "female_innocent": {
-            "name": "Ava (Innocent & Kind)",
+            "name": "Ava",
             "gender": "Female",
             "file": "female_innocent.jpg",
             "description": "Warm, natural young woman with kind smile"
         },
         "male_innocent": {
-            "name": "Lucas (Innocent & Sincere)",
+            "name": "Lucas",
             "gender": "Male",
             "file": "male_innocent.jpg",
-            "description": "Thoughtful, kind young man with genuine smile"
+            "description": "Thoughtful, kind young man with sincere gaze"
         },
         "female_poetic": {
-            "name": "Elena (Poetic & Soulful)",
+            "name": "Elena",
             "gender": "Female",
             "file": "female_poetic.jpg",
             "description": "Gentle storyteller with warm twilight glow"
         },
         "male_adventurer": {
-            "name": "Leo (Adventurer & Explorer)",
+            "name": "Leo",
             "gender": "Male",
             "file": "male_adventurer.jpg",
-            "description": "Charismatic mountain explorer with warm gaze"
+            "description": "Mountain explorer with courageous warm gaze"
         }
     }
 
@@ -142,7 +144,7 @@ class Config:
         "MOTIVATION": {
             "label": "Daily Discipline & Stoicism",
             "tagline": "MENTAL TOUGHNESS",
-            "accent_hex": "#F59E0B", # Radiant Amber Gold
+            "accent_hex": "#F59E0B",
             "accent_rgb": (245, 158, 11),
             "music_file": "cinematic_ambient_drone.wav",
             "default_voice": "christopher_male",
@@ -151,7 +153,7 @@ class Config:
         "ADVENTURE": {
             "label": "Storytelling & Adventure",
             "tagline": "UNEXPLORED REALMS",
-            "accent_hex": "#10B981", # Emerald Forest
+            "accent_hex": "#10B981",
             "accent_rgb": (16, 185, 129),
             "music_file": "adventure_epic_drone.wav",
             "default_voice": "andrew_male",
@@ -160,16 +162,16 @@ class Config:
         "ROMANTIC": {
             "label": "Romantic & Poetic",
             "tagline": "HEART & SOUL",
-            "accent_hex": "#F43F5E", # Sunset Rose
+            "accent_hex": "#F43F5E",
             "accent_rgb": (244, 63, 94),
             "music_file": "romantic_warm_pad.wav",
             "default_voice": "ava_female",
-            "default_avatar": "female_poetic"
+            "default_avatar": "female_innocent"
         },
         "THRILLER": {
             "label": "Thriller & Suspense",
             "tagline": "THE UNSEEN TRUTH",
-            "accent_hex": "#06B6D4", # Electric Cyan / Noir
+            "accent_hex": "#06B6D4",
             "accent_rgb": (6, 182, 212),
             "music_file": "thriller_suspense_drone.wav",
             "default_voice": "christopher_male",
@@ -178,7 +180,7 @@ class Config:
         "WISDOM": {
             "label": "Life Wisdom & Parables",
             "tagline": "TIMELESS TRUTHS",
-            "accent_hex": "#A855F7", # Royal Violet
+            "accent_hex": "#A855F7",
             "accent_rgb": (168, 85, 247),
             "music_file": "cinematic_ambient_drone.wav",
             "default_voice": "brian_male",
@@ -187,10 +189,63 @@ class Config:
     }
 
     @classmethod
+    def get_avatars(cls) -> dict:
+        """Returns base avatars merged with custom user uploaded characters."""
+        avatars = cls._BASE_AVATARS.copy()
+        if cls.CUSTOM_AVATARS_FILE.exists():
+            try:
+                with open(cls.CUSTOM_AVATARS_FILE, "r", encoding="utf-8") as f:
+                    custom = json.load(f)
+                    avatars.update(custom)
+            except Exception:
+                pass
+        return avatars
+
+    @classmethod
+    def save_custom_avatar(cls, avatar_id: str, avatar_data: dict):
+        current = {}
+        if cls.CUSTOM_AVATARS_FILE.exists():
+            try:
+                with open(cls.CUSTOM_AVATARS_FILE, "r", encoding="utf-8") as f:
+                    current = json.load(f)
+            except Exception:
+                current = {}
+        current[avatar_id] = avatar_data
+        with open(cls.CUSTOM_AVATARS_FILE, "w", encoding="utf-8") as f:
+            json.dump(current, f, indent=2)
+
+    @classmethod
+    def get_voices(cls) -> dict:
+        """Returns base voices merged with custom user uploaded/cloned voices."""
+        voices = cls._BASE_VOICES.copy()
+        if cls.CUSTOM_VOICES_FILE.exists():
+            try:
+                with open(cls.CUSTOM_VOICES_FILE, "r", encoding="utf-8") as f:
+                    custom = json.load(f)
+                    voices.update(custom)
+            except Exception:
+                pass
+        return voices
+
+    @classmethod
+    def save_custom_voice(cls, voice_id: str, voice_data: dict):
+        current = {}
+        if cls.CUSTOM_VOICES_FILE.exists():
+            try:
+                with open(cls.CUSTOM_VOICES_FILE, "r", encoding="utf-8") as f:
+                    current = json.load(f)
+            except Exception:
+                current = {}
+        current[voice_id] = voice_data
+        with open(cls.CUSTOM_VOICES_FILE, "w", encoding="utf-8") as f:
+            json.dump(current, f, indent=2)
+
+    @classmethod
     def ensure_dirs(cls):
         cls.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         cls.FONTS_DIR.mkdir(parents=True, exist_ok=True)
         cls.MUSIC_DIR.mkdir(parents=True, exist_ok=True)
         cls.AVATARS_DIR.mkdir(parents=True, exist_ok=True)
+        cls.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 Config.ensure_dirs()

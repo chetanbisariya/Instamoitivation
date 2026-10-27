@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedAvatar = "female_innocent";
     let selectedVoice = "ava_female";
     let selectedTopic = "MIDNIGHT CONFESSIONS";
-    let optionsData = null;
+    let optionsData = { avatars: {}, voices: {}, categories: {} };
 
     // Category Presets
     const CATEGORY_TOPICS = {
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const categoryTaglineBadge = document.getElementById("categoryTaglineBadge");
 
     const categoryTabs = document.querySelectorAll("#categoryTabsContainer .cat-tab");
-    const avatarCards = document.querySelectorAll("#avatarsPickerContainer .avatar-card");
+    const avatarsPickerContainer = document.getElementById("avatarsPickerContainer");
     const voiceSelect = document.getElementById("voiceSelect");
     const topicChipsContainer = document.getElementById("topicChipsContainer");
     const customPromptInput = document.getElementById("customPromptInput");
@@ -51,6 +51,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const reelsGrid = document.getElementById("reelsGrid");
     const refreshLibraryBtn = document.getElementById("refreshLibraryBtn");
 
+    // Creator Lab Elements
+    const openCreatorLabBtn = document.getElementById("openCreatorLabBtn");
+    const closeCreatorLabBtn = document.getElementById("closeCreatorLabBtn");
+    const creatorLabModal = document.getElementById("creatorLabModal");
+    const quickAddAvatarBtn = document.getElementById("quickAddAvatarBtn");
+    const quickAddVoiceBtn = document.getElementById("quickAddVoiceBtn");
+    const labTabs = document.querySelectorAll(".modal-tab");
+    const labTabContents = document.querySelectorAll(".lab-tab-content");
+
+    const avatarDropzone = document.getElementById("avatarDropzone");
+    const avatarFileInput = document.getElementById("avatarFileInput");
+    const avatarDropzoneContent = document.getElementById("avatarDropzoneContent");
+    const avatarPreviewContainer = document.getElementById("avatarPreviewContainer");
+    const avatarPreviewImg = document.getElementById("avatarPreviewImg");
+    const avatarUploadForm = document.getElementById("avatarUploadForm");
+    const customAvatarName = document.getElementById("customAvatarName");
+    const customAvatarRole = document.getElementById("customAvatarRole");
+    const avatarUploadMsg = document.getElementById("avatarUploadMsg");
+
+    const voiceUploadForm = document.getElementById("voiceUploadForm");
+    const voiceFileInput = document.getElementById("voiceFileInput");
+    const customVoiceName = document.getElementById("customVoiceName");
+    const cloneInElevenLabs = document.getElementById("cloneInElevenLabs");
+    const voiceUploadMsg = document.getElementById("voiceUploadMsg");
+
+    const directAudioForm = document.getElementById("directAudioForm");
+    const directAudioFile = document.getElementById("directAudioFile");
+    const directAudioScript = document.getElementById("directAudioScript");
+    const directAudioCategory = document.getElementById("directAudioCategory");
+    const directAudioTopic = document.getElementById("directAudioTopic");
+    const directAudioMsg = document.getElementById("directAudioMsg");
+
     // Settings Modal Elements
     const openSettingsBtn = document.getElementById("openSettingsBtn");
     const closeSettingsBtn = document.getElementById("closeSettingsBtn");
@@ -68,14 +100,104 @@ document.addEventListener("DOMContentLoaded", () => {
     const cfgBufferProfileId = document.getElementById("cfgBufferProfileId");
     const cfgWebhookUrl = document.getElementById("cfgWebhookUrl");
 
-    // 1. Category Switcher
+    // 1. Fetch Options (Avatars, Voices, Categories)
+    async function loadOptions() {
+        try {
+            const res = await fetch("/api/options");
+            optionsData = await res.json();
+            renderAvatarsPicker(optionsData.avatars);
+            renderVoiceDropdown(optionsData.voices);
+        } catch (err) {
+            console.error("Options fetch error:", err);
+        }
+    }
+
+    function renderAvatarsPicker(avatars) {
+        avatarsPickerContainer.innerHTML = "";
+        
+        Object.entries(avatars).forEach(([avKey, avInfo]) => {
+            const card = document.createElement("div");
+            card.className = `avatar-card ${selectedAvatar === avKey ? 'active' : ''}`;
+            card.setAttribute("data-avatar", avKey);
+            
+            const isCustom = avInfo.custom;
+            card.innerHTML = `
+                ${isCustom ? '<span class="avatar-custom-badge">CUSTOM</span>' : ''}
+                <img src="/avatars/${avInfo.file}" alt="${escapeHtml(avInfo.name)}" class="avatar-thumb" onerror="this.src='/avatars/female_innocent.jpg'">
+                <div class="avatar-info">
+                    <span class="avatar-name">${escapeHtml(avInfo.name)}</span>
+                    <span class="avatar-desc">${escapeHtml(avInfo.description ? avInfo.description.split(' ')[0] : 'Narrator')}</span>
+                </div>
+            `;
+            card.addEventListener("click", () => setAvatar(avKey));
+            avatarsPickerContainer.appendChild(card);
+        });
+
+        // Add None / Minimal card
+        const noneCard = document.createElement("div");
+        noneCard.className = `avatar-card ${selectedAvatar === 'none' ? 'active' : ''}`;
+        noneCard.setAttribute("data-avatar", "none");
+        noneCard.innerHTML = `
+            <div class="avatar-thumb avatar-none-thumb">🚫</div>
+            <div class="avatar-info">
+                <span class="avatar-name">Minimal</span>
+                <span class="avatar-desc">Waveform Only</span>
+            </div>
+        `;
+        noneCard.addEventListener("click", () => setAvatar("none"));
+        avatarsPickerContainer.appendChild(noneCard);
+    }
+
+    function renderVoiceDropdown(voices) {
+        voiceSelect.innerHTML = "";
+        
+        const femaleGroup = document.createElement("optgroup");
+        femaleGroup.label = "Girl / Female Voices";
+
+        const maleGroup = document.createElement("optgroup");
+        maleGroup.label = "Male Voices";
+
+        const customGroup = document.createElement("optgroup");
+        customGroup.label = "Custom & Cloned Voices";
+
+        Object.entries(voices).forEach(([vKey, vInfo]) => {
+            const opt = document.createElement("option");
+            opt.value = vKey;
+            opt.textContent = `${vInfo.name} — ${vInfo.description}`;
+            if (vKey === selectedVoice) opt.selected = true;
+
+            if (vInfo.custom) {
+                customGroup.appendChild(opt);
+            } else if (vInfo.gender === "Female") {
+                femaleGroup.appendChild(opt);
+            } else {
+                maleGroup.appendChild(opt);
+            }
+        });
+
+        if (customGroup.children.length > 0) voiceSelect.appendChild(customGroup);
+        voiceSelect.appendChild(femaleGroup);
+        voiceSelect.appendChild(maleGroup);
+    }
+
+    function setAvatar(avKey) {
+        selectedAvatar = avKey;
+        document.querySelectorAll("#avatarsPickerContainer .avatar-card").forEach(c => {
+            c.classList.toggle("active", c.getAttribute("data-avatar") === avKey);
+        });
+    }
+
+    voiceSelect.addEventListener("change", (e) => {
+        selectedVoice = e.target.value;
+    });
+
+    // 2. Category Switcher
     function setCategory(catKey) {
         selectedCategory = catKey;
         categoryTabs.forEach(t => {
             t.classList.toggle("active", t.getAttribute("data-cat") === catKey);
         });
 
-        // Update Tagline
         const taglines = {
             "MOTIVATION": "DAILY DISCIPLINE & STOICISM",
             "ADVENTURE": "STORYTELLING & ADVENTURE",
@@ -85,7 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         categoryTaglineBadge.textContent = taglines[catKey] || catKey;
 
-        // Populate Topic Chips
         const topics = CATEGORY_TOPICS[catKey] || CATEGORY_TOPICS["MOTIVATION"];
         topicChipsContainer.innerHTML = "";
         topics.forEach((t, i) => {
@@ -101,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         selectedTopic = topics[0];
 
-        // Suggest best default voice and avatar for the category
+        // Recommend default avatar & voice pairing
         if (catKey === "ROMANTIC") {
             setAvatar("female_innocent");
             voiceSelect.value = "ava_female";
@@ -131,26 +252,157 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 2. Avatar Selection
-    function setAvatar(avKey) {
-        selectedAvatar = avKey;
-        avatarCards.forEach(c => {
-            c.classList.toggle("active", c.getAttribute("data-avatar") === avKey);
-        });
+    // 3. Creator Lab (Custom Character & Voice Upload)
+    openCreatorLabBtn.addEventListener("click", () => {
+        creatorLabModal.style.display = "flex";
+        switchLabTab("uploadAvatarTab");
+    });
+    quickAddAvatarBtn.addEventListener("click", () => {
+        creatorLabModal.style.display = "flex";
+        switchLabTab("uploadAvatarTab");
+    });
+    quickAddVoiceBtn.addEventListener("click", () => {
+        creatorLabModal.style.display = "flex";
+        switchLabTab("uploadVoiceTab");
+    });
+    closeCreatorLabBtn.addEventListener("click", () => creatorLabModal.style.display = "none");
+
+    function switchLabTab(tabId) {
+        labTabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-tab") === tabId));
+        labTabContents.forEach(c => c.classList.toggle("active", c.id === tabId));
     }
 
-    avatarCards.forEach(card => {
-        card.addEventListener("click", () => {
-            setAvatar(card.getAttribute("data-avatar"));
-        });
+    labTabs.forEach(tab => {
+        tab.addEventListener("click", () => switchLabTab(tab.getAttribute("data-tab")));
     });
 
-    // 3. Voice Selection
-    voiceSelect.addEventListener("change", (e) => {
-        selectedVoice = e.target.value;
+    // Avatar Dropzone Handlers
+    avatarDropzone.addEventListener("click", () => avatarFileInput.click());
+    avatarFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                avatarPreviewImg.src = re.target.result;
+                avatarDropzoneContent.style.display = "none";
+                avatarPreviewContainer.style.display = "flex";
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
-    // 4. Load Initial Config & Options
+    // Upload Avatar Form
+    avatarUploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const file = avatarFileInput.files[0];
+        if (!file) {
+            alert("Please select a character image first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("avatar_file", file);
+        formData.append("name", customAvatarName.value.trim());
+        formData.append("description", customAvatarRole.value.trim());
+
+        avatarUploadMsg.style.color = "var(--primary-gold)";
+        avatarUploadMsg.textContent = "Uploading & processing character portrait...";
+
+        try {
+            const res = await fetch("/api/upload/avatar", { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                avatarUploadMsg.style.color = "var(--accent-emerald)";
+                avatarUploadMsg.textContent = `✅ ${data.message}`;
+                await loadOptions();
+                setAvatar(data.avatar_id);
+                setTimeout(() => creatorLabModal.style.display = "none", 1500);
+            } else {
+                throw new Error(data.detail || "Upload failed");
+            }
+        } catch (err) {
+            avatarUploadMsg.style.color = "var(--accent-rose)";
+            avatarUploadMsg.textContent = `Error: ${err.message}`;
+        }
+    });
+
+    // Upload Voice Form
+    voiceUploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const file = voiceFileInput.files[0];
+        if (!file) {
+            alert("Please select an audio file first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("audio_file", file);
+        formData.append("name", customVoiceName.value.trim());
+        formData.append("clone_mode", cloneInElevenLabs.checked);
+
+        voiceUploadMsg.style.color = "var(--primary-gold)";
+        voiceUploadMsg.textContent = "Uploading & registering voice...";
+
+        try {
+            const res = await fetch("/api/upload/voice", { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                voiceUploadMsg.style.color = "var(--accent-emerald)";
+                voiceUploadMsg.textContent = `✅ ${data.message}`;
+                await loadOptions();
+                selectedVoice = data.voice_id;
+                voiceSelect.value = data.voice_id;
+                setTimeout(() => creatorLabModal.style.display = "none", 1500);
+            } else {
+                throw new Error(data.detail || "Upload failed");
+            }
+        } catch (err) {
+            voiceUploadMsg.style.color = "var(--accent-rose)";
+            voiceUploadMsg.textContent = `Error: ${err.message}`;
+        }
+    });
+
+    // Direct Spoken Voice Form
+    directAudioForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const file = directAudioFile.files[0];
+        if (!file) {
+            alert("Please select your voice recording file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("audio_file", file);
+        formData.append("script", directAudioScript.value.trim());
+        formData.append("category", directAudioCategory.value);
+        formData.append("avatar", selectedAvatar);
+        formData.append("topic", directAudioTopic.value.trim() || "MY SPOKEN STORY");
+
+        directAudioMsg.style.color = "var(--primary-gold)";
+        directAudioMsg.textContent = "Rendering 1080x1920 reel with your voice recording...";
+
+        try {
+            const res = await fetch("/api/generate-with-audio", { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                directAudioMsg.style.color = "var(--accent-emerald)";
+                directAudioMsg.textContent = "✅ Spoken story reel rendered successfully!";
+                creatorLabModal.style.display = "none";
+                await loadReels();
+                if (data.reel) {
+                    selectReel(data.reel);
+                    reelVideoPlayer.play().catch(() => {});
+                }
+            } else {
+                throw new Error(data.detail || "Rendering failed");
+            }
+        } catch (err) {
+            directAudioMsg.style.color = "var(--accent-rose)";
+            directAudioMsg.textContent = `Error: ${err.message}`;
+        }
+    });
+
+    // 4. Load Config & Reels
     async function loadConfig() {
         try {
             const res = await fetch("/api/config");
@@ -170,7 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 5. Load Reels Library
     async function loadReels() {
         try {
             const res = await fetch("/api/reels");
@@ -242,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderReelsGrid(currentReels);
     }
 
-    // 6. Generate Story Reel Action
+    // 5. Generate Story Reel Action
     generateReelBtn.addEventListener("click", async () => {
         generateReelBtn.disabled = true;
         generationProgressBox.style.display = "block";
@@ -290,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 7. Copy Caption
+    // 6. Copy Caption
     copyCaptionBtn.addEventListener("click", () => {
         if (!captionTextArea.value) return;
         navigator.clipboard.writeText(captionTextArea.value).then(() => {
@@ -300,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 8. Queue to Buffer / Trigger Webhook
+    // 7. Queue to Buffer / Trigger Webhook
     async function handlePublish(target) {
         if (!selectedReel) {
             alert("Please select or generate a reel first.");
@@ -337,7 +588,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dispatchBufferBtn.addEventListener("click", () => handlePublish("Buffer"));
     dispatchWebhookBtn.addEventListener("click", () => handlePublish("Webhook"));
 
-    // 9. Settings Modal
+    // 8. Settings Modal
     openSettingsBtn.addEventListener("click", () => settingsModal.style.display = "flex");
     closeSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
     cancelSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
@@ -384,8 +635,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/'/g, "&#039;");
     }
 
-    // Initialize Default
-    setCategory("ROMANTIC");
+    // Initialize
+    loadOptions().then(() => {
+        setCategory("ROMANTIC");
+    });
     loadConfig();
     loadReels();
 });

@@ -2,18 +2,21 @@ import datetime
 import glob
 import json
 import os
+import shutil
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from PIL import Image, ImageOps
 
 from agent.config import Config
 from agent.runner import DailyReelAgent
+from agent.voice import VoiceSynthesizer
 from agent.publisher import SocialPublisher
 
-app = FastAPI(title="Instagram Motivation & Storytelling Agent Studio")
+app = FastAPI(title="Instagram Story & Motivation Agent Studio")
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,11 +52,10 @@ class ConfigUpdateRequest(BaseModel):
 
 @app.get("/api/options")
 def get_options():
-    """Returns all available categories, voices, and avatars."""
     return {
         "categories": Config.CATEGORIES,
-        "voices": Config.VOICES,
-        "avatars": Config.AVATARS,
+        "voices": Config.get_voices(),
+        "avatars": Config.get_avatars(),
         "defaults": {
             "category": Config.DEFAULT_CATEGORY,
             "voice": Config.DEFAULT_VOICE,
@@ -126,7 +128,6 @@ def update_config(req: ConfigUpdateRequest):
     with open(env_path, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
 
-    # Reload memory
     if req.instagram_handle: Config.INSTAGRAM_HANDLE = req.instagram_handle
     if req.default_category: Config.DEFAULT_CATEGORY = req.default_category
     if req.default_voice: Config.DEFAULT_VOICE = req.default_voice
@@ -142,6 +143,167 @@ def update_config(req: ConfigUpdateRequest):
     if req.schedule_time: Config.SCHEDULE_TIME = req.schedule_time
 
     return {"success": True, "message": "Settings updated successfully."}
+
+@app.post("/api/upload/avatar")
+async def upload_custom_avatar(
+    avatar_file: UploadFile = File(...),
+    name: str = Form(...),
+    gender: str = Form("Custom"),
+    description: str = Form("Custom Narrator Character")
+):
+    """Uploads a custom character image and integrates it into the avatar system."""
+    try:
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_name = "".join(c for c in name if c.isalnum()).lower() or "character"
+        avatar_id = f"custom_{safe_name}_{timestamp_str}"
+        filename = f"{avatar_id}.jpg"
+
+        dest_path = Config.AVATARS_DIR / filename
+        static_dest_path = Config.BASE_DIR / "studio" / "static" / "avatars" / filename
+        static_dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Process and save as square JPEG
+        image = Image.open(avatar_file.file).convert("RGB")
+        image = ImageOps.fit(image, (500, 500), method=Image.Resampling.LANCZOS)
+        image.save(dest_path, "JPEG", quality=92)
+        image.save(static_dest_path, "JPEG", quality=92)
+
+        avatar_data = {
+            "name": name.strip(),
+            "gender": gender.strip(),
+            "file": filename,
+            "description": description.strip() or f"Custom character {name}",
+            "custom": True
+        }
+        Config.save_custom_avatar(avatar_id, avatar_data)
+
+        # Invalidate video engine avatar cache
+        agent.video_engine.avatar_cache = agent.video_engine._preload_avatars()
+
+        return {
+            "success": True,
+            "avatar_id": avatar_id,
+            "avatar_data": avatar_data,
+            "message": f"Character '{name}' uploaded and ready to narrate!"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Avatar upload failed: {str(e)}")
+
+@app.post("/api/upload/voice")
+async def upload_custom_voice(
+    audio_file: UploadFile = File(...),
+    name: str = Form(...),
+    clone_mode: bool = Form(False),
+    description: str = Form("")
+):
+    """Uploads a voice recording sample for cloning or direct use."""
+    try:
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_name = "".join(c for c in name if c.isalnum()).lower() or "voice"
+        voice_id = f"custom_voice_{safe_name}_{timestamp_str}"
+        ext = Path(audio_file.filename).suffix or ".mp3"
+        filename = f"{voice_id}{ext}"
+        saved_path = Config.UPLOADS_DIR / filename
+
+        with open(saved_path, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+
+        cloned_voice_id = ""
+        clone_msg = "Saved locally"
+
+        if clone_mode and Config.ELEVENLABS_API_KEY:
+            clone_res = VoiceSynthesizer.clone_voice_with_elevenlabs(
+                name=name,
+                audio_file_path=str(saved_path),
+                description=description or f"Custom clone for {name}"
+            )
+            if clone_res.get("success"):
+                cloned_voice_id = clone_res.get("voice_id", "")
+                clone_msg = f"Cloned in ElevenLabs (ID: {cloned_voice_id})"
+            else:
+                clone_msg = f"Local save only (Cloning notice: {clone_res.get('message')})"
+
+        voice_data = {
+            "name": f"{name} (Custom)",
+            "gender": "Custom",
+            "edge_id": "en-US-AvaNeural",
+            "eleven_id": cloned_voice_id or "21m00Tcm4TlvDq8ikWAM",
+            "audio_file": str(saved_path),
+            "description": description.strip() or f"Custom uploaded voice ({clone_msg})",
+            "custom": True
+        }
+        Config.save_custom_voice(voice_id, voice_data)
+
+        return {
+            "success": True,
+            "voice_id": voice_id,
+            "voice_data": voice_data,
+            "message": f"Voice '{name}' registered successfully! ({clone_msg})"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Voice upload failed: {str(e)}")
+
+@app.post("/api/generate-with-audio")
+async def generate_with_custom_audio(
+    audio_file: UploadFile = File(...),
+    category: str = Form("ROMANTIC"),
+    avatar: str = Form("female_innocent"),
+    topic: str = Form("MY SPOKEN STORY"),
+    script: str = Form(...),
+    author: str = Form("Me")
+):
+    """Directly produces a 1080x1920 reel from the user's uploaded voice recording."""
+    try:
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        ext = Path(audio_file.filename).suffix or ".mp3"
+        saved_audio = Config.OUTPUT_DIR / f"user_voice_{timestamp_str}{ext}"
+
+        with open(saved_audio, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+
+        # Process user audio duration & word timings
+        voice_data = VoiceSynthesizer.process_direct_audio(str(saved_audio), script)
+
+        cat = category.upper() if category.upper() in Config.CATEGORIES else "ROMANTIC"
+        script_data = {
+            "category": cat,
+            "topic": topic.upper(),
+            "author": author,
+            "script": script,
+            "caption": f"{script}\n\n— {author}\n\n#story #reels #viral #fyp"
+        }
+
+        video_filename = f"reel_custom_{cat.lower()}_{timestamp_str}.mp4"
+        video_path = str(Config.OUTPUT_DIR / video_filename)
+
+        agent.video_engine.render_video(
+            script_data=script_data,
+            voice_data=voice_data,
+            output_mp4=video_path,
+            category=cat,
+            avatar_key=avatar
+        )
+
+        publish_result = SocialPublisher.queue_post(video_path, script_data, voice_data)
+
+        return {
+            "success": True,
+            "reel": {
+                "filename": video_filename,
+                "url": f"/media/{video_filename}",
+                "category": cat,
+                "topic": topic,
+                "author": author,
+                "avatar": avatar,
+                "caption": script_data["caption"],
+                "script": script,
+                "duration": voice_data["duration"],
+                "provider": "User Custom Audio",
+                "status": publish_result["status"]
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Custom audio reel generation failed: {str(e)}")
 
 @app.get("/api/reels")
 def list_reels():
