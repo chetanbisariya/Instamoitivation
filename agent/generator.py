@@ -5,175 +5,234 @@ import random
 import requests
 from agent.config import Config
 
-CURATED_SCRIPTS = [
-    {
-        "topic": "RELENTLESS FOCUS",
-        "author": "Marcus Aurelius",
-        "hook": "You have power over your mind, not outside events.",
-        "body": "Realize this, and you will find unbreakable strength. Stop asking what the world can give you. Demand from yourself what you were born to build.",
-        "script": "You have power over your mind, not outside events. Realize this, and you will find unbreakable strength. Stop asking what the world can give you. Demand from yourself what you were born to build.",
-        "reflection": "True freedom is being master of your own thoughts."
-    },
-    {
-        "topic": "THE POWER OF SILENCE",
-        "author": "Miyamoto Musashi",
-        "hook": "Do not speak of what you intend to do.",
-        "body": "Do it in silence. Let your discipline be your weapon and let your results make the noise. The warrior never shouts when the sword can strike true.",
-        "script": "Do not speak of what you intend to do. Do it in silence. Let your discipline be your weapon and let your results make the noise. The warrior never shouts when the sword can strike true.",
-        "reflection": "Move in silence. Only speak when it is time to say checkmate."
-    },
-    {
-        "topic": "EMBRACE THE HARD PATH",
-        "author": "Seneca",
-        "hook": "Difficulties strengthen the mind, as labor does the body.",
-        "body": "The comfortable road leads to weakness and regret. Choose the resistance. Run toward what you fear, for on the other side of struggle lies who you are meant to become.",
-        "script": "Difficulties strengthen the mind, as labor does the body. The comfortable road leads to weakness and regret. Choose the resistance. Run toward what you fear, for on the other side of struggle lies who you are meant to become.",
-        "reflection": "A gem cannot be polished without friction, nor a man perfected without trials."
-    },
-    {
-        "topic": "DAILY DISCIPLINE",
-        "author": "Daily Stoic",
-        "hook": "Motivation is an emotion. Discipline is a decision.",
-        "body": "Motivation shows up on sunny days. Discipline shows up in the freezing rain, when you are exhausted, broke, and doubt whispers in your ear. Do the work anyway.",
-        "script": "Motivation is an emotion. Discipline is a decision. Motivation shows up on sunny days. Discipline shows up in the freezing rain, when you are exhausted, broke, and doubt whispers in your ear. Do the work anyway.",
-        "reflection": "When your feelings say no, let your commitment say yes."
-    },
-    {
-        "topic": "UNSHAKABLE MIND",
-        "author": "Epictetus",
-        "hook": "He is a wise man who does not grieve for things he has not.",
-        "body": "Instead, he rejoices for what he has. No man is free who is not master of himself. Control your impulses, quiet your complaints, and take command of your life.",
-        "script": "He is a wise man who does not grieve for things he has not. Instead, he rejoices for what he has. No man is free who is not master of himself. Control your impulses, quiet your complaints, and take command of your life.",
-        "reflection": "Mastery of self is the only empire worth conquering."
-    },
-    {
-        "topic": "OVERCOMING PROCRASTINATION",
-        "author": "The Iron Law",
-        "hook": "Tomorrow is the graveyard of great intentions.",
-        "body": "Every excuse you make today is a debt your future self has to repay with tears. Kill the doubt. Stop waiting for the perfect moment. Take the first step now.",
-        "script": "Tomorrow is the graveyard of great intentions. Every excuse you make today is a debt your future self has to repay with tears. Kill the doubt. Stop waiting for the perfect moment. Take the first step now.",
-        "reflection": "One day or Day One. You decide."
-    },
-    {
-        "topic": "RADICAL ACCOUNTABILITY",
-        "author": "Stoic Creed",
-        "hook": "No one is coming to save you.",
-        "body": "Not your friends, not your government, not luck. You hold the pen to your own story. Take absolute ownership of your errors and rise higher tomorrow.",
-        "script": "No one is coming to save you. Not your friends, not your government, not luck. You hold the pen to your own story. Take absolute ownership of your errors and rise higher tomorrow.",
-        "reflection": "Total responsibility equals total freedom."
-    },
-    {
-        "topic": "STAND FIRM",
-        "author": "Marcus Aurelius",
-        "hook": "Be like the cliff against which the waves continually break.",
-        "body": "It stands firm, and about it the boiling waters subside into rest. Let the chaos rage around you. You remain steady, grounded, and unyielding.",
-        "script": "Be like the cliff against which the waves continually break. It stands firm, and about it the boiling waters subside into rest. Let the chaos rage around you. You remain steady, grounded, and unyielding.",
-        "reflection": "Calm in the storm is the greatest superpower."
-    },
-    {
-        "topic": "EARLY RISER",
-        "author": "The Morning Code",
-        "hook": "While the world sleeps, destinies are shaped.",
-        "body": "The dawn belongs to the hungry. Win the first hour of your day and you win the battle for your mind. Rise early. Breathe the cold air. Conquer your craft.",
-        "script": "While the world sleeps, destinies are shaped. The dawn belongs to the hungry. Win the first hour of your day and you win the battle for your mind. Rise early. Breathe the cold air. Conquer your craft.",
-        "reflection": "Victory begins before sunrise."
-    },
-    {
-        "topic": "FORGE YOUR LEGACY",
-        "author": "Ancient Wisdom",
-        "hook": "We suffer more often in imagination than in reality.",
-        "body": "Stop tormenting yourself with what could go wrong. Focus solely on what you can build right now. Courage is not the absence of fear, but the triumph over it.",
-        "script": "We suffer more often in imagination than in reality. Stop tormenting yourself with what could go wrong. Focus solely on what you can build right now. Courage is not the absence of fear, but the triumph over it.",
-        "reflection": "Fear is temporary. Regret lasts forever."
-    }
-]
+# Multi-Category Database
+CATEGORY_SCRIPTS = {
+    "MOTIVATION": [
+        {
+            "topic": "RELENTLESS FOCUS",
+            "author": "Marcus Aurelius",
+            "hook": "You have power over your mind, not outside events.",
+            "body": "Realize this, and you will find unbreakable strength. Stop asking what the world can give you. Demand from yourself what you were born to build.",
+            "script": "You have power over your mind, not outside events. Realize this, and you will find unbreakable strength. Stop asking what the world can give you. Demand from yourself what you were born to build.",
+            "reflection": "True freedom is being master of your own thoughts."
+        },
+        {
+            "topic": "THE POWER OF SILENCE",
+            "author": "Miyamoto Musashi",
+            "hook": "Do not speak of what you intend to do.",
+            "body": "Do it in silence. Let your discipline be your weapon and let your results make the noise. The warrior never shouts when the sword can strike true.",
+            "script": "Do not speak of what you intend to do. Do it in silence. Let your discipline be your weapon and let your results make the noise. The warrior never shouts when the sword can strike true.",
+            "reflection": "Move in silence. Only speak when it is time to say checkmate."
+        },
+        {
+            "topic": "DAILY DISCIPLINE",
+            "author": "The Iron Law",
+            "hook": "Motivation is an emotion. Discipline is a decision.",
+            "body": "Motivation shows up on sunny days. Discipline shows up in the freezing rain, when you are exhausted, broke, and doubt whispers in your ear. Do the work anyway.",
+            "script": "Motivation is an emotion. Discipline is a decision. Motivation shows up on sunny days. Discipline shows up in the freezing rain, when you are exhausted, broke, and doubt whispers in your ear. Do the work anyway.",
+            "reflection": "When your feelings say no, let your commitment say yes."
+        },
+        {
+            "topic": "STAND FIRM",
+            "author": "Marcus Aurelius",
+            "hook": "Be like the cliff against which the waves continually break.",
+            "body": "It stands firm, and about it the boiling waters subside into rest. Let the chaos rage around you. You remain steady, grounded, and unyielding.",
+            "script": "Be like the cliff against which the waves continually break. It stands firm, and about it the boiling waters subside into rest. Let the chaos rage around you. You remain steady, grounded, and unyielding.",
+            "reflection": "Calm in the storm is the greatest superpower."
+        }
+    ],
 
-DEFAULT_HASHTAGS = [
-    "#discipline", "#stoicism", "#mindset", "#motivation", "#dailystoic",
-    "#focus", "#selfmastery", "#marcusaurelius", "#resilience", "#grindset",
-    "#mentalstrength", "#motivationalquotes", "#successmindset", "#consistency",
-    "#innerpeace", "#wisdom", "#quotesdaily", "#reels", "#fyp"
-]
+    "ADVENTURE": [
+        {
+            "topic": "INTO THE UNKNOWN",
+            "author": "The Explorer's Chronicle",
+            "hook": "The map ends where your courage begins.",
+            "body": "We crossed the ridge just as the storm broke over the ancient valley. For centuries, they warned that no one returns from the northern peaks. But the greatest danger in life is never taking the leap.",
+            "script": "The map ends where your courage begins. We crossed the ridge just as the storm broke over the ancient valley. For centuries, they warned that no one returns from the northern peaks. But the greatest danger in life is never taking the leap.",
+            "reflection": "Adventure isn't outside you. It's the fire within that refuses to sit still."
+        },
+        {
+            "topic": "THE WHISPERING CANYON",
+            "author": "Wilderness Lore",
+            "hook": "Deep in the canyon, the compass started spinning wildly.",
+            "body": "Three days with nothing but a leather notebook and cold mountain air. You don't conquer nature. You learn to listen to its rhythm until you forget who you were in the crowded city.",
+            "script": "Deep in the canyon, the compass started spinning wildly. Three days with nothing but a leather notebook and cold mountain air. You don't conquer nature. You learn to listen to its rhythm until you forget who you were in the crowded city.",
+            "reflection": "Not all who wander are lost. Some are finding where they belong."
+        },
+        {
+            "topic": "SUMMIT OF THE GODS",
+            "author": "Highland Tales",
+            "hook": "At nineteen thousand feet, every breath is a negotiation with destiny.",
+            "body": "Your legs burn, the snow blinds your vision, and every instinct screams to turn around. Then you reach the summit. And you see the sunrise lighting up half the world.",
+            "script": "At nineteen thousand feet, every breath is a negotiation with destiny. Your legs burn, the snow blinds your vision, and every instinct screams to turn around. Then you reach the summit. And you see the sunrise lighting up half the world.",
+            "reflection": "The mountain does not yield. You just grow taller."
+        }
+    ],
 
-def generate_with_gemini(topic: str = "", prompt_override: str = "") -> dict | None:
-    """Uses Gemini API to generate an original motivational script and caption."""
+    "ROMANTIC": [
+        {
+            "topic": "MIDNIGHT CONFESSIONS",
+            "author": "Letters to the Stars",
+            "hook": "I used to think soulmates were a myth made up by poets.",
+            "body": "Until the moment you laughed in the quiet rain, and the entire universe suddenly made sense. Some people are not just strangers you meet. They are memories your heart was waiting to recall.",
+            "script": "I used to think soulmates were a myth made up by poets. Until the moment you laughed in the quiet rain, and the entire universe suddenly made sense. Some people are not just strangers you meet. They are memories your heart was waiting to recall.",
+            "reflection": "You are my favorite thought before I fall asleep."
+        },
+        {
+            "topic": "THE UNSPOKEN TRUTH",
+            "author": "Twilight Prose",
+            "hook": "If love was simple, poets would have nothing left to write.",
+            "body": "It is in the way you look away when you are caught staring. In the silence between our words where everything that matters is said without a single sound. Stay with me a little longer.",
+            "script": "If love was simple, poets would have nothing left to write. It is in the way you look away when you are caught staring. In the silence between our words where everything that matters is said without a single sound. Stay with me a little longer.",
+            "reflection": "In all the crowded rooms in the world, my eyes will always look for you."
+        },
+        {
+            "topic": "TIMELESS CONNECTION",
+            "author": "A Million Lifetimes",
+            "hook": "We loved with a love that was more than love.",
+            "body": "Through crowded train stations and quiet rainy mornings, you were the calm in all my storms. If I had to live a thousand lives, I would search the world to find you in every single one.",
+            "script": "We loved with a love that was more than love. Through crowded train stations and quiet rainy mornings, you were the calm in all my storms. If I had to live a thousand lives, I would search the world to find you in every single one.",
+            "reflection": "You will always be my once-in-a-lifetime."
+        }
+    ],
+
+    "THRILLER": [
+        {
+            "topic": "THE 3 AM KNOCK",
+            "author": "Dark Frequency",
+            "hook": "The message on my phone said: Look behind you. But I live alone.",
+            "body": "The front door was bolted from the inside. Then I heard the floorboards in the hallway creak. Once. Twice. And then the doorknob slowly started to turn.",
+            "script": "The message on my phone said: Look behind you. But I live alone. The front door was bolted from the inside. Then I heard the floorboards in the hallway creak. Once. Twice. And then the doorknob slowly started to turn.",
+            "reflection": "Some secrets don't stay buried in the dark."
+        },
+        {
+            "topic": "THE FORBIDDEN TAPE",
+            "author": "Midnight Files",
+            "hook": "They told us the lighthouse had been abandoned for thirty years.",
+            "body": "So why was the beacon rotating at midnight? When we stepped into the keeper's cabin, the tea on the table was still steaming. And the guestbook had tonight's date written in fresh red ink.",
+            "script": "They told us the lighthouse had been abandoned for thirty years. So why was the beacon rotating at midnight? When we stepped into the keeper's cabin, the tea on the table was still steaming. And the guestbook had tonight's date written in fresh red ink.",
+            "reflection": "Never look into windows when you walk through empty corridors."
+        },
+        {
+            "topic": "VANISHED AT DAWN",
+            "author": "Cold Case Mystery",
+            "hook": "The security camera captured her entering the elevator. It never opened again.",
+            "body": "The elevator shaft was empty. The cables were cut twenty minutes before she stepped inside. So who was holding her hand as the doors slipped shut?",
+            "script": "The security camera captured her entering the elevator. It never opened again. The elevator shaft was empty. The cables were cut twenty minutes before she stepped inside. So who was holding her hand as the doors slipped shut?",
+            "reflection": "Sometimes the shadows have eyes."
+        }
+    ],
+
+    "WISDOM": [
+        {
+            "topic": "THE ART OF LETTING GO",
+            "author": "Eastern Wisdom",
+            "hook": "You cannot calm the ocean with your bare hands.",
+            "body": "Stop fighting the waves. Drop your shoulders, breathe in the stillness, and realize that peace was never about having control. It is about letting go of what you cannot change.",
+            "script": "You cannot calm the ocean with your bare hands. Stop fighting the waves. Drop your shoulders, breathe in the stillness, and realize that peace was never about having control. It is about letting go of what you cannot change.",
+            "reflection": "He who masters peace inside cannot be defeated outside."
+        },
+        {
+            "topic": "THE RIPPLE EFFECT",
+            "author": "Ancient Parable",
+            "hook": "A single word spoken in anger can destroy years of trust.",
+            "body": "Watch your thoughts, for they become words. Watch your words, for they become actions. A peaceful mind creates an unshakeable fortress around your life.",
+            "script": "A single word spoken in anger can destroy years of trust. Watch your thoughts, for they become words. Watch your words, for they become actions. A peaceful mind creates an unshakeable fortress around your life.",
+            "reflection": "Kindness is the highest form of intelligence."
+        }
+    ]
+}
+
+CATEGORY_HASHTAGS = {
+    "MOTIVATION": ["#discipline", "#stoicism", "#mindset", "#motivation", "#dailystoic", "#focus", "#selfmastery", "#grind", "#resilience", "#reels", "#fyp"],
+    "ADVENTURE": ["#adventure", "#wanderlust", "#travelstory", "#wilderness", "#explorer", "#mountains", "#naturevibes", "#survival", "#expedition", "#reels", "#fyp"],
+    "ROMANTIC": ["#lovequotes", "#romantic", "#soulmate", "#poetic", "#heartfelt", "#relationshipgoals", "#loveletters", "#feelings", "#deepquotes", "#reels", "#fyp"],
+    "THRILLER": ["#thriller", "#mystery", "#creepy", "#suspense", "#darkstories", "#spooky", "#plotwist", "#horrorstories", "#scaryreels", "#reels", "#fyp"],
+    "WISDOM": ["#wisdom", "#innerpeace", "#mindfulness", "#lifelessons", "#philosophical", "#mentalclarity", "#zen", "#calm", "#quotesdaily", "#reels", "#fyp"]
+}
+
+def generate_with_gemini(category: str = "MOTIVATION", prompt_override: str = "") -> dict | None:
     api_key = Config.GEMINI_API_KEY
     if not api_key:
         return None
-    
+
+    cat = category.upper() if category.upper() in Config.CATEGORIES else "MOTIVATION"
+    genre_guidelines = {
+        "MOTIVATION": "Focus on discipline, mental toughness, stoic philosophy, and relentless focus.",
+        "ADVENTURE": "Focus on an intense, cinematic adventure story or expedition into uncharted wilderness with high stakes and rich sensory details.",
+        "ROMANTIC": "Focus on deeply emotional, tender, poetic romantic prose, soul connections, and heartfelt love.",
+        "THRILLER": "Focus on a gripping, atmospheric psychological thriller or mystery micro-story with an unforgettable hook and a chilling cliffhanger.",
+        "WISDOM": "Focus on timeless life perspective, inner peace, and letting go of worry."
+    }
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     system_instruction = (
-        "You are an expert viral content creator for Instagram Reels specializing in stoicism, mental toughness, and daily discipline. "
-        "Output ONLY a raw JSON object with keys: 'topic' (2-3 words uppercase), 'author' (historical figure or 'Stoic Wisdom'), "
-        "'hook' (punchy opening sentence, 6-10 words), 'body' (2 sentences delivering deep wisdom), "
-        "'script' (combined hook + body, 30-50 words total, written for spoken voice), "
-        "'caption' (engaging Instagram caption with a reflective question), "
-        "'hashtags' (array of 15 relevant hashtags)."
+        f"You are a master storyteller for viral Instagram Reels in the {cat} genre. {genre_guidelines.get(cat, '')} "
+        "Output ONLY a raw JSON object with keys: "
+        "'topic' (2-3 words uppercase), 'author' (character or creator attribution), "
+        "'hook' (first sentence, highly captivating hook under 12 words), "
+        "'body' (2-3 sentences delivering the core story/insight, under 45 words), "
+        "'script' (combined hook + body, 35-55 words total, written to be spoken naturally), "
+        "'caption' (engaging Instagram caption with a question), "
+        "'hashtags' (array of 12 viral hashtags)."
     )
-    user_prompt = prompt_override if prompt_override else f"Topic theme: {topic or 'Relentless discipline and mental toughness'}. Make it unforgettable and cinematic."
-    
+
+    user_prompt = prompt_override if prompt_override else f"Write a captivating {cat} micro-story for Instagram Reels."
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{system_instruction}\n\nTask: {user_prompt}"}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "temperature": 0.8
-        }
+        "contents": [{"parts": [{"text": f"{system_instruction}\n\nUser request: {user_prompt}"}]}],
+        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.85}
     }
-    
+
     try:
         res = requests.post(url, json=payload, timeout=20)
         if res.status_code == 200:
-            data = res.json()
-            raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            parsed = json.loads(raw_text)
-            return parsed
+            raw_text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+            return json.loads(raw_text)
     except Exception as e:
-        print(f"[Generator] Gemini API error, falling back to curated library: {e}")
+        print(f"[Generator] Gemini API error: {e}")
     return None
 
-def get_daily_script(date_str: str = None, topic: str = "", custom_prompt: str = "") -> dict:
-    """Returns a motivational script either via Gemini AI or curated rotation."""
-    # Try Gemini if key is provided or custom prompt requested
-    if custom_prompt or (Config.GEMINI_API_KEY and random.random() > 0.3):
-        gemini_result = generate_with_gemini(topic=topic, prompt_override=custom_prompt)
-        if gemini_result and "script" in gemini_result:
-            if "hashtags" not in gemini_result or not gemini_result["hashtags"]:
-                gemini_result["hashtags"] = DEFAULT_HASHTAGS
-            if "caption" not in gemini_result:
-                gemini_result["caption"] = f"{gemini_result['script']}\n\nSave this reel to remind yourself of this truth."
-            return gemini_result
-            
-    # Deterministic daily rotation using hash of date
+def get_daily_script(category: str = "MOTIVATION", date_str: str = None, topic: str = "", custom_prompt: str = "") -> dict:
+    cat = category.upper() if category.upper() in CATEGORY_SCRIPTS else "MOTIVATION"
+
+    if custom_prompt or (Config.GEMINI_API_KEY and random.random() > 0.4):
+        ai_res = generate_with_gemini(category=cat, prompt_override=custom_prompt or topic)
+        if ai_res and "script" in ai_res:
+            ai_res["category"] = cat
+            if not ai_res.get("hashtags"):
+                ai_res["hashtags"] = CATEGORY_HASHTAGS.get(cat, CATEGORY_HASHTAGS["MOTIVATION"])
+            return ai_res
+
     if not date_str:
         date_str = datetime.date.today().isoformat()
-        
-    seed = int(hashlib.md5(date_str.encode()).hexdigest(), 16)
-    idx = seed % len(CURATED_SCRIPTS)
-    item = CURATED_SCRIPTS[idx].copy()
-    
+
+    scripts = CATEGORY_SCRIPTS.get(cat, CATEGORY_SCRIPTS["MOTIVATION"])
+    seed = int(hashlib.md5(f"{date_str}_{cat}".encode()).hexdigest(), 16)
+    idx = seed % len(scripts)
+    item = scripts[idx].copy()
+    item["category"] = cat
+
     if topic:
         item["topic"] = topic.upper()
-        
+
+    hashtags = CATEGORY_HASHTAGS.get(cat, CATEGORY_HASHTAGS["MOTIVATION"])
     caption = (
         f"{item['hook']}\n\n"
         f"{item['body']}\n\n"
         f"— {item['author']}\n\n"
-        f"💬 What area of your life demands this focus today?\n"
-        f"🔖 Save this reel and review it whenever weakness whispers in your mind.\n\n"
-        f"Follow {Config.INSTAGRAM_HANDLE} for your daily reminder of strength.\n\n"
-        f"{' '.join(DEFAULT_HASHTAGS)}"
+        f"💬 What does this bring to mind for you? Drop a comment.\n"
+        f"🔖 Save this reel to listen again tonight.\n\n"
+        f"Follow {Config.INSTAGRAM_HANDLE} for daily {cat.lower()} stories.\n\n"
+        f"{' '.join(hashtags)}"
     )
     item["caption"] = caption
-    item["hashtags"] = DEFAULT_HASHTAGS
+    item["hashtags"] = hashtags
     return item
 
 if __name__ == "__main__":
-    script = get_daily_script()
-    print("Generated Script for Today:")
-    print(json.dumps(script, indent=2))
+    for cat in ["ADVENTURE", "ROMANTIC", "THRILLER"]:
+        s = get_daily_script(category=cat)
+        print(f"\n--- {cat} Sample ---")
+        print("Topic:", s["topic"])
+        print("Hook:", s["hook"])
+        print("Script:", s["script"])

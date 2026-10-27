@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import os
 import re
@@ -12,18 +13,29 @@ class VoiceSynthesizer:
     @staticmethod
     def clean_text_for_speech(text: str) -> str:
         """Removes markdown, emojis, and hashtags for crisp speech synthesis."""
-        # Remove emojis and hashtag blocks
         cleaned = re.sub(r'#\w+', '', text)
         cleaned = re.sub(r'[\U00010000-\U0010ffff]', '', cleaned, flags=re.UNICODE)
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
         return cleaned
 
     @classmethod
+    def resolve_voice_ids(cls, voice_key: str = None) -> tuple[str, str, str]:
+        """
+        Resolves voice_key into (edge_voice_id, eleven_voice_id, display_name).
+        """
+        if not voice_key or voice_key not in Config.VOICES:
+            # Default fallback
+            voice_key = "ava_female" if "girl" in str(voice_key).lower() or "female" in str(voice_key).lower() else "christopher_male"
+            
+        voice_info = Config.VOICES.get(voice_key, Config.VOICES["christopher_male"])
+        edge_id = voice_info["edge_id"]
+        eleven_id = voice_info["eleven_id"]
+        name = voice_info["name"]
+        return edge_id, eleven_id, name
+
+    @classmethod
     def synthesize_with_elevenlabs(cls, text: str, output_path: str, voice_id: str = None) -> tuple[bool, str, list]:
-        """
-        Synthesizes speech using ElevenLabs API.
-        Returns: (success, message, word_timings)
-        """
+        """Synthesizes speech using ElevenLabs API."""
         api_key = Config.ELEVENLABS_API_KEY
         if not api_key:
             return False, "ELEVENLABS_API_KEY is not set.", []
@@ -52,7 +64,6 @@ class VoiceSynthesizer:
             res = requests.post(url, headers=headers, json=payload, timeout=30)
             if res.status_code == 200:
                 data = res.json()
-                import base64
                 audio_bytes = base64.b64decode(data.get("audio_base64", ""))
                 with open(output_path, "wb") as f:
                     f.write(audio_bytes)
@@ -90,7 +101,6 @@ class VoiceSynthesizer:
                         
                 return True, "ElevenLabs synthesis succeeded with alignment", word_timings
             elif res.status_code == 404:
-                # If with-timestamps not supported on this endpoint/tier, try standard endpoint
                 std_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
                 res_std = requests.post(std_url, headers={"xi-api-key": api_key, "Content-Type": "application/json"}, json=payload, timeout=30)
                 if res_std.status_code == 200:
@@ -98,21 +108,21 @@ class VoiceSynthesizer:
                         f.write(res_std.content)
                     return True, "ElevenLabs standard synthesis succeeded", []
                 else:
-                    return False, f"ElevenLabs API error: {res_std.status_code} {res_std.text}", []
+                    return False, f"ElevenLabs API error: {res_std.status_code}", []
             else:
-                return False, f"ElevenLabs API error: {res.status_code} {res.text}", []
+                return False, f"ElevenLabs API error: {res.status_code}", []
         except Exception as e:
             return False, f"ElevenLabs request exception: {str(e)}", []
 
     @classmethod
     async def _async_edge_tts(cls, text: str, output_path: str, voice: str) -> None:
-        communicate = edge_tts.Communicate(text, voice, rate="-4%", pitch="-2Hz")
+        communicate = edge_tts.Communicate(text, voice, rate="-3%", pitch="-1Hz")
         await communicate.save(output_path)
 
     @classmethod
     def synthesize_with_edge_tts(cls, text: str, output_path: str, voice: str = None) -> tuple[bool, str, list]:
-        """Free fallback high quality TTS using Microsoft Edge neural voice."""
-        voice_name = voice or Config.FALLBACK_TTS_VOICE or "en-US-ChristopherNeural"
+        """High quality neural TTS using Microsoft Edge neural voice."""
+        voice_name = voice or Config.FALLBACK_TTS_VOICE or "en-US-AvaNeural"
         try:
             asyncio.run(cls._async_edge_tts(text, output_path, voice_name))
             return True, f"Edge-TTS synthesis succeeded with voice {voice_name}", []
@@ -120,35 +130,38 @@ class VoiceSynthesizer:
             return False, f"Edge-TTS failed: {str(e)}", []
 
     @classmethod
-    def generate_voiceover(cls, text: str, output_path: str) -> dict:
+    def generate_voiceover(cls, text: str, output_path: str, voice_key: str = None) -> dict:
         """
-        Synthesizes voiceover trying ElevenLabs first, falling back to Edge-TTS.
-        Also parses audio duration and calculates word pacing.
+        Synthesizes voiceover based on voice_key, measuring duration and timing.
         """
         clean_text = cls.clean_text_for_speech(text)
         words = clean_text.split()
         
+        edge_id, eleven_id, display_name = cls.resolve_voice_ids(voice_key)
+
         provider = "ElevenLabs"
-        success, msg, word_timings = cls.synthesize_with_elevenlabs(clean_text, output_path)
+        success, msg, word_timings = False, "", []
+        
+        if Config.ELEVENLABS_API_KEY:
+            success, msg, word_timings = cls.synthesize_with_elevenlabs(clean_text, output_path, voice_id=eleven_id)
         
         if not success:
-            print(f"[Voice] {msg}. Falling back to Edge-TTS ({Config.FALLBACK_TTS_VOICE})...")
-            provider = "Edge-TTS"
-            success, msg, word_timings = cls.synthesize_with_edge_tts(clean_text, output_path)
+            provider = f"Edge-TTS ({display_name})"
+            success, msg, word_timings = cls.synthesize_with_edge_tts(clean_text, output_path, voice=edge_id)
             if not success:
-                raise RuntimeError(f"All TTS providers failed: {msg}")
-        
-        # Measure audio duration using ffmpeg probe
+                # Ultimate fallback
+                fallback_v = "en-US-ChristopherNeural"
+                success, msg, word_timings = cls.synthesize_with_edge_tts(clean_text, output_path, voice=fallback_v)
+                if not success:
+                    raise RuntimeError(f"All TTS synthesis options failed: {msg}")
+
         duration = cls.get_audio_duration(output_path)
         
-        # If word timings were not provided by API alignment, generate proportional timings
+        # Proportional word pacing if alignment timestamps not available
         if not word_timings and words:
-            # Distribute words evenly across duration with padding
-            pad_start = 0.4
-            pad_end = 0.5
+            pad_start = 0.35
+            pad_end = 0.45
             effective_dur = max(duration - pad_start - pad_end, 1.0)
-            
-            # Weight word lengths by character count
             total_chars = sum(len(w) for w in words)
             curr_time = pad_start
             
@@ -160,37 +173,35 @@ class VoiceSynthesizer:
                     "start": curr_time,
                     "end": curr_time + word_dur
                 })
-                curr_time += word_dur + 0.05
+                curr_time += word_dur + 0.04
                 
         return {
             "audio_path": output_path,
             "duration": duration,
             "provider": provider,
+            "voice_key": voice_key or "default",
+            "voice_name": display_name,
             "word_timings": word_timings,
             "word_count": len(words)
         }
 
     @staticmethod
     def get_audio_duration(file_path: str) -> float:
-        """Calculates audio duration in seconds via imageio_ffmpeg."""
         import imageio_ffmpeg
         ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-        cmd = [
-            ffmpeg_exe, "-i", file_path,
-            "-f", "null", "-"
-        ]
+        cmd = [ffmpeg_exe, "-i", file_path, "-f", "null", "-"]
         res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True)
-        # Parse Duration: 00:00:15.32 from stderr
         match = re.search(r'Duration:\s*(\d+):(\d+):(\d+\.\d+)', res.stderr)
         if match:
             h, m, s = match.groups()
             return int(h) * 3600 + int(m) * 60 + float(s)
-        return 15.0 # fallback default duration
+        return 15.0
 
 if __name__ == "__main__":
-    out_file = str(Config.OUTPUT_DIR / "test_voice.mp3")
+    out_f = str(Config.OUTPUT_DIR / "test_girl_voice.mp3")
     res = VoiceSynthesizer.generate_voiceover(
-        "Motivation is an emotion. Discipline is a decision. Show up and do the work anyway.",
-        out_file
+        "Close your eyes and breathe. Somewhere between the quiet mountains and the night sky, destiny is waiting for you.",
+        out_f,
+        voice_key="ava_female"
     )
-    print("Synthesized audio successfully:", res["provider"], f"Duration: {res['duration']:.2f}s")
+    print("Girl voice synthesis test:", res["provider"], f"Duration: {res['duration']:.2f}s")

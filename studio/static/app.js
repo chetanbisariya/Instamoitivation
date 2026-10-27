@@ -1,27 +1,46 @@
 // ========================================================
-// INSTAGRAM MOTIVATION AGENT - STUDIO CLIENT LOGIC
+// INSTAGRAM STORY & MOTIVATION AGENT - STUDIO CLIENT
 // ========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     // State
     let currentReels = [];
     let selectedReel = null;
-    let selectedTopic = "DAILY DISCIPLINE";
+    let selectedCategory = "ROMANTIC";
+    let selectedAvatar = "female_innocent";
+    let selectedVoice = "ava_female";
+    let selectedTopic = "MIDNIGHT CONFESSIONS";
+    let optionsData = null;
+
+    // Category Presets
+    const CATEGORY_TOPICS = {
+        "MOTIVATION": ["DAILY DISCIPLINE", "RELENTLESS FOCUS", "THE POWER OF SILENCE", "STAND FIRM", "UNSHAKABLE MIND"],
+        "ADVENTURE": ["INTO THE UNKNOWN", "THE WHISPERING CANYON", "SUMMIT OF THE GODS", "ANCIENT PASSAGE", "THE WILD FRONTIER"],
+        "ROMANTIC": ["MIDNIGHT CONFESSIONS", "THE UNSPOKEN TRUTH", "TIMELESS CONNECTION", "STARS ALIGNED", "TWILIGHT LETTERS"],
+        "THRILLER": ["THE 3 AM KNOCK", "THE FORBIDDEN TAPE", "VANISHED AT DAWN", "SHADOW ON THE WALL", "LOCKED ELEVATOR"],
+        "WISDOM": ["THE ART OF LETTING GO", "THE RIPPLE EFFECT", "STILLNESS IN CHAOS", "TIMELESS PERSPECTIVE", "THE QUIET MIND"]
+    };
 
     // Elements
     const reelVideoPlayer = document.getElementById("reelVideoPlayer");
     const videoSource = document.getElementById("videoSource");
     const currentFileName = document.getElementById("currentFileName");
+    const currentGenreBadge = document.getElementById("currentGenreBadge");
     const currentVoiceProvider = document.getElementById("currentVoiceProvider");
     const downloadReelBtn = document.getElementById("downloadReelBtn");
-    
-    const topicChips = document.querySelectorAll("#topicChipsContainer .chip");
+    const categoryTaglineBadge = document.getElementById("categoryTaglineBadge");
+
+    const categoryTabs = document.querySelectorAll("#categoryTabsContainer .cat-tab");
+    const avatarCards = document.querySelectorAll("#avatarsPickerContainer .avatar-card");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const topicChipsContainer = document.getElementById("topicChipsContainer");
     const customPromptInput = document.getElementById("customPromptInput");
+
     const generateReelBtn = document.getElementById("generateReelBtn");
     const generationProgressBox = document.getElementById("generationProgressBox");
     const progressStepTitle = document.getElementById("progressStepTitle");
     const progressStepDesc = document.getElementById("progressStepDesc");
-    
+
     const captionTextArea = document.getElementById("captionTextArea");
     const copyCaptionBtn = document.getElementById("copyCaptionBtn");
     const currentPublishStatus = document.getElementById("currentPublishStatus");
@@ -40,46 +59,118 @@ document.addEventListener("DOMContentLoaded", () => {
     const settingsModal = document.getElementById("settingsModal");
 
     const cfgInstaHandle = document.getElementById("cfgInstaHandle");
+    const cfgScheduleTime = document.getElementById("cfgScheduleTime");
+    const cfgCategoryRotation = document.getElementById("cfgCategoryRotation");
+    const cfgShowAvatar = document.getElementById("cfgShowAvatar");
     const cfgElevenKey = document.getElementById("cfgElevenKey");
-    const cfgVoiceId = document.getElementById("cfgVoiceId");
     const cfgGeminiKey = document.getElementById("cfgGeminiKey");
     const cfgBufferToken = document.getElementById("cfgBufferToken");
     const cfgBufferProfileId = document.getElementById("cfgBufferProfileId");
     const cfgWebhookUrl = document.getElementById("cfgWebhookUrl");
-    const cfgScheduleTime = document.getElementById("cfgScheduleTime");
 
-    // 1. Topic Selection
-    topicChips.forEach(chip => {
-        chip.addEventListener("click", () => {
-            topicChips.forEach(c => c.classList.remove("active"));
-            chip.classList.add("active");
-            selectedTopic = chip.getAttribute("data-topic");
+    // 1. Category Switcher
+    function setCategory(catKey) {
+        selectedCategory = catKey;
+        categoryTabs.forEach(t => {
+            t.classList.toggle("active", t.getAttribute("data-cat") === catKey);
+        });
+
+        // Update Tagline
+        const taglines = {
+            "MOTIVATION": "DAILY DISCIPLINE & STOICISM",
+            "ADVENTURE": "STORYTELLING & ADVENTURE",
+            "ROMANTIC": "ROMANTIC & POETIC",
+            "THRILLER": "THRILLER & SUSPENSE",
+            "WISDOM": "LIFE WISDOM & PARABLES"
+        };
+        categoryTaglineBadge.textContent = taglines[catKey] || catKey;
+
+        // Populate Topic Chips
+        const topics = CATEGORY_TOPICS[catKey] || CATEGORY_TOPICS["MOTIVATION"];
+        topicChipsContainer.innerHTML = "";
+        topics.forEach((t, i) => {
+            const chip = document.createElement("button");
+            chip.className = `chip ${i === 0 ? 'active' : ''}`;
+            chip.textContent = t;
+            chip.addEventListener("click", () => {
+                document.querySelectorAll("#topicChipsContainer .chip").forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+                selectedTopic = t;
+            });
+            topicChipsContainer.appendChild(chip);
+        });
+        selectedTopic = topics[0];
+
+        // Suggest best default voice and avatar for the category
+        if (catKey === "ROMANTIC") {
+            setAvatar("female_innocent");
+            voiceSelect.value = "ava_female";
+            selectedVoice = "ava_female";
+        } else if (catKey === "ADVENTURE") {
+            setAvatar("male_adventurer");
+            voiceSelect.value = "andrew_male";
+            selectedVoice = "andrew_male";
+        } else if (catKey === "THRILLER") {
+            setAvatar("female_innocent");
+            voiceSelect.value = "christopher_male";
+            selectedVoice = "christopher_male";
+        } else if (catKey === "WISDOM") {
+            setAvatar("male_innocent");
+            voiceSelect.value = "brian_male";
+            selectedVoice = "brian_male";
+        } else {
+            setAvatar("male_innocent");
+            voiceSelect.value = "christopher_male";
+            selectedVoice = "christopher_male";
+        }
+    }
+
+    categoryTabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            setCategory(tab.getAttribute("data-cat"));
         });
     });
 
-    // 2. Load Config
+    // 2. Avatar Selection
+    function setAvatar(avKey) {
+        selectedAvatar = avKey;
+        avatarCards.forEach(c => {
+            c.classList.toggle("active", c.getAttribute("data-avatar") === avKey);
+        });
+    }
+
+    avatarCards.forEach(card => {
+        card.addEventListener("click", () => {
+            setAvatar(card.getAttribute("data-avatar"));
+        });
+    });
+
+    // 3. Voice Selection
+    voiceSelect.addEventListener("change", (e) => {
+        selectedVoice = e.target.value;
+    });
+
+    // 4. Load Initial Config & Options
     async function loadConfig() {
         try {
             const res = await fetch("/api/config");
             const data = await res.json();
             
             cfgInstaHandle.value = data.instagram_handle || "";
-            cfgVoiceId.value = data.elevenlabs_voice_id || "";
             cfgScheduleTime.value = data.schedule_time || "09:00";
+            cfgCategoryRotation.checked = data.schedule_category_rotation !== false;
+            cfgShowAvatar.checked = data.show_avatar !== false;
             cfgWebhookUrl.value = data.webhook_url || "";
             
             const statusText = document.getElementById("agentStatusText");
-            if (data.elevenlabs_configured) {
-                statusText.textContent = `ElevenLabs Voice Active (${data.schedule_time})`;
-            } else {
-                statusText.textContent = `Edge-TTS Neural Active (${data.schedule_time})`;
-            }
+            const mode = data.schedule_category_rotation ? "Auto-Rotate Daily" : data.default_category;
+            statusText.textContent = `Daily Scheduler Ready (${mode} @ ${data.schedule_time})`;
         } catch (err) {
-            console.error("Failed to load config:", err);
+            console.error("Config fetch error:", err);
         }
     }
 
-    // 3. Load Reels Library
+    // 5. Load Reels Library
     async function loadReels() {
         try {
             const res = await fetch("/api/reels");
@@ -91,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 selectReel(reels[0]);
             }
         } catch (err) {
-            console.error("Failed to load reels:", err);
+            console.error("Reels fetch error:", err);
         }
     }
 
@@ -105,12 +196,26 @@ document.addEventListener("DOMContentLoaded", () => {
         reels.forEach(reel => {
             const card = document.createElement("div");
             card.className = `reel-card ${selectedReel && selectedReel.filename === reel.filename ? 'active' : ''}`;
+            
+            const cat = reel.category || "MOTIVATION";
+            const catColors = {
+                "MOTIVATION": "var(--primary-gold)",
+                "ADVENTURE": "var(--genre-adventure)",
+                "ROMANTIC": "var(--genre-romantic)",
+                "THRILLER": "var(--genre-thriller)",
+                "WISDOM": "var(--genre-wisdom)"
+            };
+            const col = catColors[cat] || "var(--primary-gold)";
+
             card.innerHTML = `
-                <div class="reel-card-topic">${escapeHtml(reel.topic || 'MOTIVATION')}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
+                    <span class="reel-card-topic" style="color: ${col};">${escapeHtml(cat)}</span>
+                    <span style="font-size: 0.6875rem; color: var(--text-muted);">${escapeHtml(reel.topic || '')}</span>
+                </div>
                 <div class="reel-card-quote">"${escapeHtml(reel.script || reel.topic)}"</div>
                 <div class="reel-card-footer">
                     <span>${reel.duration ? reel.duration.toFixed(1) + 's' : ''} • ${reel.size_mb || 0} MB</span>
-                    <span>${reel.created_at ? reel.created_at.split(' ')[0] : ''}</span>
+                    <span>${reel.voice_name || 'Neural'}</span>
                 </div>
             `;
             card.addEventListener("click", () => selectReel(reel));
@@ -121,33 +226,33 @@ document.addEventListener("DOMContentLoaded", () => {
     function selectReel(reel) {
         selectedReel = reel;
         
-        // Update Video Player
         videoSource.src = reel.url;
         reelVideoPlayer.load();
         
-        // Update Info
         currentFileName.textContent = reel.filename;
-        currentVoiceProvider.textContent = reel.voice_provider || (reel.filename.includes('sample') ? 'Edge-TTS (Christopher)' : 'Neural Voice');
+        currentGenreBadge.textContent = reel.category || "MOTIVATION";
+        currentVoiceProvider.textContent = reel.voice_name || reel.voice_provider || "Neural Voice";
         downloadReelBtn.href = reel.url;
         downloadReelBtn.setAttribute("download", reel.filename);
 
-        // Update Caption & Status
         captionTextArea.value = reel.caption || "";
         currentPublishStatus.textContent = reel.status || "SAVED_LOCALLY";
 
-        // Highlight active in grid
         document.querySelectorAll(".reel-card").forEach(c => c.classList.remove("active"));
         renderReelsGrid(currentReels);
     }
 
-    // 4. Generate Reel Action
+    // 6. Generate Story Reel Action
     generateReelBtn.addEventListener("click", async () => {
         generateReelBtn.disabled = true;
         generationProgressBox.style.display = "block";
-        progressStepTitle.textContent = "Initiating Video Pipeline...";
-        progressStepDesc.textContent = "Generating script, synthesizing neural voiceover, and analyzing audio spectrum...";
+        progressStepTitle.textContent = `Crafting ${selectedCategory} Story Reel...`;
+        progressStepDesc.textContent = `Generating story prose, synthesizing voice (${selectedVoice}), pulsing avatar aura, and rendering 1080x1920 MP4...`;
 
         const payload = {
+            category: selectedCategory,
+            voice: selectedVoice,
+            avatar: selectedAvatar,
             topic: selectedTopic,
             prompt: customPromptInput.value.trim()
         };
@@ -164,8 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error(data.detail || "Generation failed");
             }
 
-            // Success
-            progressStepTitle.textContent = "Reel Rendered Successfully!";
+            progressStepTitle.textContent = "Story Reel Rendered Successfully!";
             progressStepDesc.textContent = "1080x1920 MP4 ready for preview and publishing.";
             
             await loadReels();
@@ -186,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 5. Copy Caption
+    // 7. Copy Caption
     copyCaptionBtn.addEventListener("click", () => {
         if (!captionTextArea.value) return;
         navigator.clipboard.writeText(captionTextArea.value).then(() => {
@@ -196,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 6. Queue to Buffer / Trigger Webhook
+    // 8. Queue to Buffer / Trigger Webhook
     async function handlePublish(target) {
         if (!selectedReel) {
             alert("Please select or generate a reel first.");
@@ -233,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dispatchBufferBtn.addEventListener("click", () => handlePublish("Buffer"));
     dispatchWebhookBtn.addEventListener("click", () => handlePublish("Webhook"));
 
-    // 7. Settings Modal
+    // 9. Settings Modal
     openSettingsBtn.addEventListener("click", () => settingsModal.style.display = "flex");
     closeSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
     cancelSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
@@ -241,13 +345,14 @@ document.addEventListener("DOMContentLoaded", () => {
     saveSettingsBtn.addEventListener("click", async () => {
         const updatePayload = {
             instagram_handle: cfgInstaHandle.value.trim(),
+            schedule_time: cfgScheduleTime.value.trim(),
+            schedule_category_rotation: cfgCategoryRotation.checked,
+            show_avatar: cfgShowAvatar.checked,
             elevenlabs_api_key: cfgElevenKey.value.trim(),
-            elevenlabs_voice_id: cfgVoiceId.value.trim(),
             gemini_api_key: cfgGeminiKey.value.trim(),
             buffer_access_token: cfgBufferToken.value.trim(),
             buffer_profile_id: cfgBufferProfileId.value.trim(),
-            webhook_url: cfgWebhookUrl.value.trim(),
-            schedule_time: cfgScheduleTime.value.trim()
+            webhook_url: cfgWebhookUrl.value.trim()
         };
 
         try {
@@ -279,7 +384,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/'/g, "&#039;");
     }
 
-    // Initialize
+    // Initialize Default
+    setCategory("ROMANTIC");
     loadConfig();
     loadReels();
 });

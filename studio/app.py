@@ -3,9 +3,9 @@ import glob
 import json
 import os
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -13,7 +13,7 @@ from agent.config import Config
 from agent.runner import DailyReelAgent
 from agent.publisher import SocialPublisher
 
-app = FastAPI(title="Instagram Motivation Agent Studio")
+app = FastAPI(title="Instagram Motivation & Storytelling Agent Studio")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,15 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global agent instance
 agent = DailyReelAgent()
 
 class GenerateRequest(BaseModel):
+    category: str = "MOTIVATION"
+    voice: str = ""
+    avatar: str = ""
     topic: str = ""
     prompt: str = ""
 
 class ConfigUpdateRequest(BaseModel):
     instagram_handle: str = ""
+    default_category: str = ""
+    default_voice: str = ""
+    default_avatar: str = ""
+    show_avatar: bool = True
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = ""
     buffer_access_token: str = ""
@@ -39,20 +45,41 @@ class ConfigUpdateRequest(BaseModel):
     webhook_url: str = ""
     gemini_api_key: str = ""
     schedule_time: str = ""
+    schedule_category_rotation: bool = True
+
+@app.get("/api/options")
+def get_options():
+    """Returns all available categories, voices, and avatars."""
+    return {
+        "categories": Config.CATEGORIES,
+        "voices": Config.VOICES,
+        "avatars": Config.AVATARS,
+        "defaults": {
+            "category": Config.DEFAULT_CATEGORY,
+            "voice": Config.DEFAULT_VOICE,
+            "avatar": Config.DEFAULT_AVATAR,
+            "show_avatar": Config.SHOW_AVATAR,
+            "schedule_time": Config.SCHEDULE_TIME,
+            "rotation_enabled": Config.SCHEDULE_CATEGORY_ROTATION
+        }
+    }
 
 @app.get("/api/config")
 def get_config():
     return {
         "instagram_handle": Config.INSTAGRAM_HANDLE,
-        "default_topic": Config.DEFAULT_TOPIC,
+        "default_category": Config.DEFAULT_CATEGORY,
+        "default_voice": Config.DEFAULT_VOICE,
+        "default_avatar": Config.DEFAULT_AVATAR,
+        "show_avatar": Config.SHOW_AVATAR,
         "elevenlabs_configured": bool(Config.ELEVENLABS_API_KEY),
         "elevenlabs_voice_id": Config.ELEVENLABS_VOICE_ID,
-        "fallback_voice": Config.FALLBACK_TTS_VOICE,
         "gemini_configured": bool(Config.GEMINI_API_KEY),
         "buffer_configured": bool(Config.BUFFER_ACCESS_TOKEN and Config.BUFFER_PROFILE_ID),
         "webhook_configured": bool(Config.WEBHOOK_URL),
         "webhook_url": Config.WEBHOOK_URL,
         "schedule_time": Config.SCHEDULE_TIME,
+        "schedule_category_rotation": Config.SCHEDULE_CATEGORY_ROTATION,
         "output_dir": str(Config.OUTPUT_DIR)
     }
 
@@ -66,6 +93,11 @@ def update_config(req: ConfigUpdateRequest):
 
     updates = {}
     if req.instagram_handle: updates["INSTAGRAM_HANDLE"] = req.instagram_handle
+    if req.default_category: updates["DEFAULT_CATEGORY"] = req.default_category
+    if req.default_voice: updates["DEFAULT_VOICE"] = req.default_voice
+    if req.default_avatar: updates["DEFAULT_AVATAR"] = req.default_avatar
+    updates["SHOW_AVATAR"] = "true" if req.show_avatar else "false"
+    updates["SCHEDULE_CATEGORY_ROTATION"] = "true" if req.schedule_category_rotation else "false"
     if req.elevenlabs_api_key: updates["ELEVENLABS_API_KEY"] = req.elevenlabs_api_key
     if req.elevenlabs_voice_id: updates["ELEVENLABS_VOICE_ID"] = req.elevenlabs_voice_id
     if req.buffer_access_token: updates["BUFFER_ACCESS_TOKEN"] = req.buffer_access_token
@@ -74,7 +106,6 @@ def update_config(req: ConfigUpdateRequest):
     if req.gemini_api_key: updates["GEMINI_API_KEY"] = req.gemini_api_key
     if req.schedule_time: updates["SCHEDULE_TIME"] = req.schedule_time
 
-    # Update or append
     new_lines = []
     found_keys = set()
     for line in lines:
@@ -95,8 +126,13 @@ def update_config(req: ConfigUpdateRequest):
     with open(env_path, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
 
-    # Reload in-memory
+    # Reload memory
     if req.instagram_handle: Config.INSTAGRAM_HANDLE = req.instagram_handle
+    if req.default_category: Config.DEFAULT_CATEGORY = req.default_category
+    if req.default_voice: Config.DEFAULT_VOICE = req.default_voice
+    if req.default_avatar: Config.DEFAULT_AVATAR = req.default_avatar
+    Config.SHOW_AVATAR = req.show_avatar
+    Config.SCHEDULE_CATEGORY_ROTATION = req.schedule_category_rotation
     if req.elevenlabs_api_key: Config.ELEVENLABS_API_KEY = req.elevenlabs_api_key
     if req.elevenlabs_voice_id: Config.ELEVENLABS_VOICE_ID = req.elevenlabs_voice_id
     if req.buffer_access_token: Config.BUFFER_ACCESS_TOKEN = req.buffer_access_token
@@ -105,11 +141,10 @@ def update_config(req: ConfigUpdateRequest):
     if req.gemini_api_key: Config.GEMINI_API_KEY = req.gemini_api_key
     if req.schedule_time: Config.SCHEDULE_TIME = req.schedule_time
 
-    return {"success": True, "message": "Configuration updated successfully."}
+    return {"success": True, "message": "Settings updated successfully."}
 
 @app.get("/api/reels")
 def list_reels():
-    """Lists all generated reels with their manifest metadata."""
     mp4_files = sorted(glob.glob(str(Config.OUTPUT_DIR / "*.mp4")), key=os.path.getmtime, reverse=True)
     reels = []
     for f in mp4_files:
@@ -128,12 +163,15 @@ def list_reels():
             "url": f"/media/{p.name}",
             "size_mb": round(p.stat().st_size / (1024 * 1024), 2),
             "created_at": datetime.datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
-            "topic": meta.get("topic", "MOTIVATION"),
-            "author": meta.get("author", "Daily Stoic"),
+            "category": meta.get("category", "MOTIVATION"),
+            "topic": meta.get("topic", "STORIES"),
+            "author": meta.get("author", "Storyteller"),
+            "avatar": meta.get("avatar", "female_innocent"),
             "script": meta.get("script", ""),
             "caption": meta.get("caption", ""),
             "hashtags": meta.get("hashtags", []),
             "duration": meta.get("duration", 0),
+            "voice_name": meta.get("voice_name", "Neural Voice"),
             "status": meta.get("status", "SAVED_LOCALLY")
         })
     return reels
@@ -141,18 +179,27 @@ def list_reels():
 @app.post("/api/generate")
 def generate_reel(req: GenerateRequest):
     try:
-        result = agent.run_pipeline(topic=req.topic, custom_prompt=req.prompt)
+        result = agent.run_pipeline(
+            category=req.category,
+            voice_key=req.voice,
+            avatar_key=req.avatar,
+            topic=req.topic,
+            custom_prompt=req.prompt
+        )
         return {
             "success": True,
             "reel": {
                 "filename": result["video_filename"],
                 "url": f"/media/{result['video_filename']}",
+                "category": result["category"],
                 "topic": result["script_data"].get("topic"),
                 "author": result["script_data"].get("author"),
+                "avatar": result["avatar_key"],
                 "caption": result["script_data"].get("caption"),
                 "script": result["script_data"].get("script"),
                 "hashtags": result["script_data"].get("hashtags", []),
                 "duration": result["voice_data"].get("duration"),
+                "voice_name": result["voice_data"].get("voice_name"),
                 "provider": result["voice_data"].get("provider"),
                 "status": result["publish_result"]["status"]
             }
@@ -187,7 +234,6 @@ def serve_media(filename: str):
     media_type = "video/mp4" if filename.endswith(".mp4") else "audio/mpeg"
     return FileResponse(file_p, media_type=media_type)
 
-# Serve static frontend files
 static_dir = Path(__file__).resolve().parent / "static"
 if static_dir.exists():
     app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")

@@ -1,5 +1,5 @@
 /* ========================================================
-   INSTAGRAM MOTIVATION AGENT - STUDIO THEME
+   INSTAGRAM STORY & MOTIVATION AGENT - STUDIO THEME
    Modern Dark Minimalist Editorial Aesthetic
    ======================================================== */
 
@@ -16,6 +16,11 @@
     --primary-gold: #f59e0b;
     --primary-gold-hover: #d97706;
     --primary-gold-glow: rgba(245, 158, 11, 0.25);
+
+    --genre-adventure: #10b981;
+    --genre-romantic: #f43f5e;
+    --genre-thriller: #06b6d4;
+    --genre-wisdom: #a855f7;
 
     --accent-indigo: #6366f1;
     --accent-emerald: #10b981;
@@ -49,7 +54,7 @@ body {
     overflow-x: hidden;
     background-image: 
         radial-gradient(at 10% 20%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
-        radial-gradient(at 90% 80%, rgba(99, 102, 241, 0.04) 0px, transparent 50%);
+        radial-gradient(at 90% 80%, rgba(244, 63, 94, 0.04) 0px, transparent 50%);
 }
 
 /* ================= Header ================= */
@@ -237,7 +242,7 @@ button, a.btn-primary, a.btn-secondary {
     box-shadow: 
         0 25px 60px -15px rgba(0, 0, 0, 0.9),
         0 0 0 1px rgba(255, 255, 255, 0.1),
-        0 0 35px rgba(245, 158, 11, 0.08);
+        0 0 35px rgba(244, 63, 94, 0.08);
     position: relative;
     overflow: hidden;
 }
@@ -269,23 +274,6 @@ button, a.btn-primary, a.btn-secondary {
     display: block;
 }
 
-.video-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 2rem;
-    text-align: center;
-    color: var(--text-muted);
-}
-
-.placeholder-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    opacity: 0.6;
-}
-
 .preview-meta-card {
     margin-top: 1.5rem;
     background: var(--bg-surface);
@@ -312,8 +300,6 @@ button, a.btn-primary, a.btn-secondary {
 
 .meta-actions {
     margin-top: 1rem;
-    display: flex;
-    gap: 0.75rem;
 }
 
 .meta-actions .btn-secondary {
@@ -351,9 +337,9 @@ button, a.btn-primary, a.btn-secondary {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0.25rem 0.625rem;
-    background: rgba(245, 158, 11, 0.12);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    color: var(--primary-gold);
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    color: var(--genre-romantic);
     border-radius: var(--radius-full);
 }
 
@@ -366,6 +352,129 @@ button, a.btn-primary, a.btn-secondary {
     border: 1px solid rgba(99, 102, 241, 0.3);
     color: var(--accent-indigo);
     border-radius: var(--radius-full);
+}
+
+/* ================= Category Tabs ================= */
+.category-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.5rem;
+}
+
+.cat-tab {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.cat-tab:hover {
+    border-color: var(--border-hover);
+    color: #fff;
+}
+
+.cat-tab.active[data-cat="MOTIVATION"] {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: var(--primary-gold);
+    color: var(--primary-gold);
+}
+
+.cat-tab.active[data-cat="ADVENTURE"] {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--genre-adventure);
+    color: var(--genre-adventure);
+}
+
+.cat-tab.active[data-cat="ROMANTIC"] {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: var(--genre-romantic);
+    color: var(--genre-romantic);
+}
+
+.cat-tab.active[data-cat="THRILLER"] {
+    background: rgba(6, 182, 212, 0.15);
+    border-color: var(--genre-thriller);
+    color: var(--genre-thriller);
+}
+
+.cat-tab.active[data-cat="WISDOM"] {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: var(--genre-wisdom);
+    color: var(--genre-wisdom);
+}
+
+/* ================= Avatar Picker ================= */
+.avatars-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.75rem;
+}
+
+.avatar-card {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.avatar-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+}
+
+.avatar-card.active {
+    border-color: var(--primary-gold);
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.avatar-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+    border: 2px solid var(--border-subtle);
+}
+
+.avatar-none-thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface-elevated);
+    font-size: 1.5rem;
+}
+
+.avatar-card.active .avatar-thumb {
+    border-color: var(--primary-gold);
+}
+
+.avatar-info {
+    text-align: center;
+}
+
+.avatar-name {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.avatar-desc {
+    display: block;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
 }
 
 /* ================= Forms & Inputs ================= */
@@ -405,6 +514,21 @@ button, a.btn-primary, a.btn-secondary {
 .form-input:focus {
     border-color: var(--primary-gold);
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-gold);
+    cursor: pointer;
 }
 
 .form-help {
@@ -623,7 +747,7 @@ button, a.btn-primary, a.btn-secondary {
     border: 1px solid var(--border-hover);
     border-radius: var(--radius-lg);
     width: 100%;
-    max-width: 540px;
+    max-width: 560px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
@@ -672,7 +796,6 @@ button, a.btn-primary, a.btn-secondary {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
     .main-container {
         grid-template-columns: 1fr;
