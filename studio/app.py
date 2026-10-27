@@ -34,6 +34,7 @@ class GenerateRequest(BaseModel):
     avatar: str = ""
     topic: str = ""
     prompt: str = ""
+    language: str = "en"
 
 class MovieGenerateRequest(BaseModel):
     keyword1: str = "Midnight"
@@ -42,6 +43,7 @@ class MovieGenerateRequest(BaseModel):
     genre: str = "THRILLER"
     voice: str = ""
     avatar: str = ""
+    language: str = "en"
 
 class ConfigUpdateRequest(BaseModel):
     instagram_handle: str = ""
@@ -57,6 +59,9 @@ class ConfigUpdateRequest(BaseModel):
     gemini_api_key: str = ""
     schedule_time: str = ""
     schedule_category_rotation: bool = True
+    instagram_account_id: str = ""
+    instagram_access_token: str = ""
+    youtube_api_key: str = ""
 
 @app.get("/api/options")
 def get_options():
@@ -64,13 +69,15 @@ def get_options():
         "categories": Config.CATEGORIES,
         "voices": Config.get_voices(),
         "avatars": Config.get_avatars(),
+        "languages": Config.SUPPORTED_LANGUAGES,
         "defaults": {
             "category": Config.DEFAULT_CATEGORY,
             "voice": Config.DEFAULT_VOICE,
             "avatar": Config.DEFAULT_AVATAR,
             "show_avatar": Config.SHOW_AVATAR,
             "schedule_time": Config.SCHEDULE_TIME,
-            "rotation_enabled": Config.SCHEDULE_CATEGORY_ROTATION
+            "rotation_enabled": Config.SCHEDULE_CATEGORY_ROTATION,
+            "language": "en"
         }
     }
 
@@ -88,6 +95,9 @@ def get_config():
         "buffer_configured": bool(Config.BUFFER_ACCESS_TOKEN and Config.BUFFER_PROFILE_ID),
         "webhook_configured": bool(Config.WEBHOOK_URL),
         "webhook_url": Config.WEBHOOK_URL,
+        "instagram_account_id": Config.INSTAGRAM_ACCOUNT_ID,
+        "instagram_direct_configured": bool(Config.INSTAGRAM_ACCOUNT_ID and Config.INSTAGRAM_ACCESS_TOKEN),
+        "youtube_configured": bool(Config.YOUTUBE_API_KEY),
         "schedule_time": Config.SCHEDULE_TIME,
         "schedule_category_rotation": Config.SCHEDULE_CATEGORY_ROTATION,
         "output_dir": str(Config.OUTPUT_DIR)
@@ -115,6 +125,9 @@ def update_config(req: ConfigUpdateRequest):
     if req.webhook_url: updates["WEBHOOK_URL"] = req.webhook_url
     if req.gemini_api_key: updates["GEMINI_API_KEY"] = req.gemini_api_key
     if req.schedule_time: updates["SCHEDULE_TIME"] = req.schedule_time
+    if req.instagram_account_id: updates["INSTAGRAM_ACCOUNT_ID"] = req.instagram_account_id
+    if req.instagram_access_token: updates["INSTAGRAM_ACCESS_TOKEN"] = req.instagram_access_token
+    if req.youtube_api_key: updates["YOUTUBE_API_KEY"] = req.youtube_api_key
 
     new_lines = []
     found_keys = set()
@@ -149,6 +162,9 @@ def update_config(req: ConfigUpdateRequest):
     if req.webhook_url: Config.WEBHOOK_URL = req.webhook_url
     if req.gemini_api_key: Config.GEMINI_API_KEY = req.gemini_api_key
     if req.schedule_time: Config.SCHEDULE_TIME = req.schedule_time
+    if req.instagram_account_id: Config.INSTAGRAM_ACCOUNT_ID = req.instagram_account_id
+    if req.instagram_access_token: Config.INSTAGRAM_ACCESS_TOKEN = req.instagram_access_token
+    if req.youtube_api_key: Config.YOUTUBE_API_KEY = req.youtube_api_key
 
     return {"success": True, "message": "Settings updated successfully."}
 
@@ -328,9 +344,13 @@ def list_reels():
             except Exception:
                 pass
         
+        thumb_name = f"cover_{p.stem}.jpg"
+        thumb_url = f"/media/{thumb_name}" if (p.parent / thumb_name).exists() else ""
+
         reels.append({
             "filename": p.name,
             "url": f"/media/{p.name}",
+            "thumbnail_url": thumb_url,
             "size_mb": round(p.stat().st_size / (1024 * 1024), 2),
             "created_at": datetime.datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
             "category": meta.get("category", "MOTIVATION"),
@@ -354,14 +374,19 @@ def generate_reel(req: GenerateRequest):
             voice_key=req.voice,
             avatar_key=req.avatar,
             topic=req.topic,
-            custom_prompt=req.prompt
+            custom_prompt=req.prompt,
+            language=req.language
         )
+        thumb_name = f"cover_{Path(result['video_filename']).stem}.jpg"
+        thumb_url = f"/media/{thumb_name}" if (Config.OUTPUT_DIR / thumb_name).exists() else ""
         return {
             "success": True,
             "reel": {
                 "filename": result["video_filename"],
                 "url": f"/media/{result['video_filename']}",
+                "thumbnail_url": thumb_url,
                 "category": result["category"],
+                "language": result.get("language", "en"),
                 "topic": result["script_data"].get("topic"),
                 "author": result["script_data"].get("author"),
                 "avatar": result["avatar_key"],
@@ -387,14 +412,19 @@ def generate_short_movie(req: MovieGenerateRequest):
             keyword3=req.keyword3,
             genre=req.genre,
             voice_key=req.voice,
-            avatar_key=req.avatar
+            avatar_key=req.avatar,
+            language=req.language
         )
+        thumb_name = f"cover_{Path(result['video_filename']).stem}.jpg"
+        thumb_url = f"/media/{thumb_name}" if (Config.OUTPUT_DIR / thumb_name).exists() else ""
         return {
             "success": True,
             "movie": {
                 "filename": result["video_filename"],
                 "url": f"/media/{result['video_filename']}",
+                "thumbnail_url": thumb_url,
                 "genre": result["genre"],
+                "language": req.language,
                 "keywords": result["keywords"],
                 "title": result["movie_data"].get("title"),
                 "logline": result["movie_data"].get("logline"),
@@ -428,12 +458,53 @@ def publish_reel(filename: str):
     res = SocialPublisher.queue_post(str(video_p), script_data, voice_data)
     return res
 
+@app.post("/api/publish/instagram-direct/{filename}")
+def publish_instagram_direct(filename: str):
+    video_p = Config.OUTPUT_DIR / filename
+    if not video_p.exists():
+        raise HTTPException(status_code=404, detail="Video file not found")
+
+    manifest_p = video_p.with_suffix(".json")
+    meta = {}
+    if manifest_p.exists():
+        with open(manifest_p, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+    caption = meta.get("caption", f"Daily Motivation #{filename}")
+    video_url = f"/media/{filename}"
+    res = SocialPublisher.publish_instagram_graph(video_url=video_url, caption=caption)
+    return res
+
+@app.post("/api/publish/youtube-shorts/{filename}")
+def publish_youtube_shorts(filename: str):
+    video_p = Config.OUTPUT_DIR / filename
+    if not video_p.exists():
+        raise HTTPException(status_code=404, detail="Video file not found")
+
+    manifest_p = video_p.with_suffix(".json")
+    meta = {}
+    if manifest_p.exists():
+        with open(manifest_p, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+    res = SocialPublisher.generate_youtube_manifest(str(video_p), meta)
+    return res
+
 @app.get("/media/{filename}")
 def serve_media(filename: str):
     file_p = Config.OUTPUT_DIR / filename
     if not file_p.exists():
         raise HTTPException(status_code=404, detail="File not found")
-    media_type = "video/mp4" if filename.endswith(".mp4") else "audio/mpeg"
+    if filename.endswith(".mp4"):
+        media_type = "video/mp4"
+    elif filename.endswith((".jpg", ".jpeg")):
+        media_type = "image/jpeg"
+    elif filename.endswith(".png"):
+        media_type = "image/png"
+    elif filename.endswith(".webp"):
+        media_type = "image/webp"
+    else:
+        media_type = "audio/mpeg"
     return FileResponse(file_p, media_type=media_type)
 
 static_dir = Path(__file__).resolve().parent / "static"

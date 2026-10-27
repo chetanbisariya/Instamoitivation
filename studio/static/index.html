@@ -71,6 +71,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download MP4
                     </a>
+                    <a id="downloadThumbnailBtn" href="#" download class="btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        Cover Thumbnail
+                    </a>
                 </div>
             </div>
         </section>
@@ -115,10 +119,23 @@
                     <div class="avatars-picker" id="avatarsPickerContainer"></div>
                 </div>
 
-                <!-- 3. Voice Selection -->
+                <!-- 3. Language & Accent -->
+                <div class="form-group">
+                    <label for="reelLanguageSelect" class="form-label">3. Story Language & Accent</label>
+                    <select id="reelLanguageSelect" class="form-input">
+                        <option value="en" selected>🇺🇸 English (US & UK)</option>
+                        <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                        <option value="es">🇪🇸 Español (Spanish)</option>
+                        <option value="fr">🇫🇷 Français (French)</option>
+                        <option value="de">🇩🇪 Deutsch (German)</option>
+                        <option value="ja">🇯🇵 日本語 (Japanese)</option>
+                    </select>
+                </div>
+
+                <!-- 4. Voice Selection -->
                 <div class="form-group">
                     <div class="label-with-action">
-                        <label for="voiceSelect" class="form-label">3. Select Narrator Voice</label>
+                        <label for="voiceSelect" class="form-label">4. Select Narrator Voice</label>
                         <button class="btn-link" id="quickAddVoiceBtn">+ Upload / Clone Voice</button>
                     </div>
                     <select id="voiceSelect" class="form-input"></select>
@@ -208,14 +225,25 @@
                     </div>
                 </div>
 
-                <!-- 3. Cinema Narrator & Voice -->
-                <div class="cinema-cast-grid">
+                <!-- 3. Cinema Language, Narrator & Voice -->
+                <div class="cinema-cast-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="form-group">
-                        <label class="form-label">3. Narrator Character</label>
+                        <label class="form-label">3. Film Language</label>
+                        <select id="cinemaLanguageSelect" class="form-input">
+                            <option value="en" selected>🇺🇸 English</option>
+                            <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="de">🇩🇪 Deutsch</option>
+                            <option value="ja">🇯🇵 日本語</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">4. Narrator Character</label>
                         <select id="cinemaAvatarSelect" class="form-input"></select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">4. Narration Voice</label>
+                        <label class="form-label">5. Narration Voice</label>
                         <select id="cinemaVoiceSelect" class="form-input"></select>
                     </div>
                 </div>
@@ -259,11 +287,21 @@
                 <div class="social-dispatch-actions">
                     <button class="btn-accent" id="dispatchBufferBtn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="6" x2="6.01" y2="6"></line></svg>
-                        Queue to Buffer / Instagram
+                        Queue to Buffer
                     </button>
                     <button class="btn-secondary" id="dispatchWebhookBtn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        Trigger Webhook (Make/Zapier)
+                        Make / Zapier Webhook
+                    </button>
+                </div>
+                <div class="social-dispatch-actions" style="margin-top: 0.5rem;">
+                    <button class="btn-accent" id="dispatchInstagramDirectBtn" style="background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        Instagram Direct (Graph API)
+                    </button>
+                    <button class="btn-secondary" id="dispatchYouTubeShortsBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                        YouTube Shorts Manifest
                     </button>
                 </div>
                 <div id="dispatchFeedback" class="dispatch-msg"></div>
@@ -291,6 +329,7 @@
                 <button class="modal-tab active" data-tab="uploadAvatarTab">Upload Character Avatar</button>
                 <button class="modal-tab" data-tab="uploadVoiceTab">Upload Voice / Clone</button>
                 <button class="modal-tab" data-tab="directAudioTab">Spoken Voice Narration Reel</button>
+                <button class="modal-tab" data-tab="liveMicTab">🎙️ In-Browser Mic Studio</button>
             </div>
             
             <div class="modal-body">
@@ -394,6 +433,68 @@
                         <div id="directAudioMsg" class="dispatch-msg"></div>
                     </form>
                 </div>
+
+                <!-- Tab 4: In-Browser Live Mic Studio -->
+                <div id="liveMicTab" class="lab-tab-content">
+                    <div class="mic-studio-box">
+                        <div class="mic-header">
+                            <h4>🎙️ Live Microphone Recording Studio</h4>
+                            <span class="mic-badge" id="micStatusBadge">Ready</span>
+                        </div>
+                        <p class="mic-hint">Speak directly into your microphone. Record your voiceover and render an instant 1080x1920 reel with synchronized waveforms and subtitles!</p>
+
+                        <div class="mic-visualizer-container">
+                            <canvas id="liveMicCanvas" width="460" height="90"></canvas>
+                            <div class="mic-timer-tag" id="micTimerTag">00:00 / 01:00</div>
+                        </div>
+
+                        <div class="mic-buttons-row">
+                            <button type="button" class="btn-primary" id="startMicBtn">
+                                <span class="btn-icon">🎙️</span> Start Recording
+                            </button>
+                            <button type="button" class="btn-cinema" id="stopMicBtn" style="display: none; background: #ef4444;">
+                                <span class="btn-icon">⏹️</span> Stop Recording
+                            </button>
+                            <button type="button" class="btn-ghost" id="resetMicBtn" style="display: none;">
+                                🔄 Re-record
+                            </button>
+                        </div>
+
+                        <audio id="recordedAudioPreview" controls style="display: none; width: 100%; margin: 1rem 0; border-radius: 8px;"></audio>
+
+                        <div id="micPostRecordOptions" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+                            <div class="form-group">
+                                <label for="micScriptWordsInput" class="form-label">What did you say? (Subtitles text)</label>
+                                <textarea id="micScriptWordsInput" rows="3" class="form-input" placeholder="Type or paste the transcript of your speech..."></textarea>
+                            </div>
+                            <div class="cinema-cast-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select id="micCategorySelect" class="form-input">
+                                        <option value="ROMANTIC">Romantic & Poetic</option>
+                                        <option value="ADVENTURE">Adventure</option>
+                                        <option value="THRILLER">Thriller</option>
+                                        <option value="MOTIVATION">Motivation</option>
+                                        <option value="WISDOM">Wisdom</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Narrator Avatar</label>
+                                    <select id="micAvatarSelect" class="form-input"></select>
+                                </div>
+                            </div>
+                            <div class="generator-action-bar" style="margin-top: 1rem;">
+                                <button type="button" class="btn-accent" id="renderMicReelBtn" style="flex: 1;">
+                                    🎬 Render Reel from My Recording
+                                </button>
+                                <button type="button" class="btn-secondary" id="saveMicAsVoiceBtn" style="flex: 1;">
+                                    💾 Save as Custom Voice
+                                </button>
+                            </div>
+                        </div>
+                        <div id="micFeedbackMsg" class="dispatch-msg"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -430,6 +531,21 @@
                         <input type="checkbox" id="cfgShowAvatar" checked>
                         <label for="cfgShowAvatar">Display Audio-Reactive Narrator Avatar in Reel</label>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgInstaDirectId">Instagram Business Account ID (Direct Graph API)</label>
+                    <input type="text" id="cfgInstaDirectId" class="form-input" placeholder="e.g. 17841400000000000">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgInstaDirectToken">Facebook / Instagram Page Access Token (Direct Graph API)</label>
+                    <input type="password" id="cfgInstaDirectToken" class="form-input" placeholder="Long-lived user/page access token">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgYouTubeKey">YouTube Shorts API Key (Optional)</label>
+                    <input type="password" id="cfgYouTubeKey" class="form-input" placeholder="YouTube Data API key">
                 </div>
 
                 <div class="form-group">

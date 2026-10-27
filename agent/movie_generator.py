@@ -107,11 +107,45 @@ MOVIE_TEMPLATES = {
     ]
 }
 
+MOVIE_TEMPLATES_HI = {
+    "THRILLER": [
+        {
+            "title": "तीसरा दरवाज़ा",
+            "logline": "आधी रात को प्राप्त एक रहस्यमयी संकेत एक असंभव खोज की ओर ले जाता है।",
+            "scene1": "काँच पर बारिश की बूँदें गिर रही थीं जब स्क्रीन पर {k1} दिखाई दिया। इसका यहाँ होना नामुमकिन था।",
+            "scene2": "तहखाने की गहराई में हर कदम गूँज रहा था। कमरे के केंद्र में {k2} एक अजीब सी रोशनी के साथ धड़क रहा था।",
+            "scene3": "जैसे ही मेरी उँगलियों ने उसे छुआ, कानों में फुसफुसाहट हुई: 'तुम्हें {k3} को नहीं छूना चाहिए था।' और बत्तियाँ बुझ गईं।",
+            "scene_titles": ["पहला अंक: रहस्य", "दूसरा अंक: तहखाना", "तीसरा अंक: अँधेरा"]
+        }
+    ],
+    "SCI-FI": [
+        {
+            "title": "शून्य परिक्रमा",
+            "logline": "ब्रह्मांड के अंतिम छोर पर एक प्राचीन संकेत जाग उठता है।",
+            "scene1": "पृथ्वी से लाखों प्रकाश वर्ष दूर, हमारे यान के सेंसर ने अंतरिक्ष में तैरते {k1} को पकड़ा।",
+            "scene2": "जैसे ही सिग्नल जुड़ा, वह रहस्यमयी {k2} अचानक जाग उठा और पृथ्वी के निर्देशांक दिखाने लगा।",
+            "scene3": "कंप्यूटर ने उलटी गिनती शुरू की: '{k3} अब लौट रहा है।' हम खोजकर्ता नहीं थे, हम तो सिर्फ चारा थे।",
+            "scene_titles": ["पहला अंक: गहरा अंतरिक्ष", "दूसरा अंक: जागरण", "तीसरा अंक: हमला"]
+        }
+    ],
+    "ROMANTIC": [
+        {
+            "title": "बारिश की यादें",
+            "logline": "कुछ कहानियाँ मुलाक़ात से पहले ही तारों में लिख दी जाती हैं।",
+            "scene1": "पुरानी सड़कों पर बारिश बरस रही थी। तुम उसी मोड़ पर खड़े थे, हाथों में वही {k1} लिए।",
+            "scene2": "घंटों तक हम खाली शहर में टहलते रहे, अपने उन सपनों और {k2} की बातें करते हुए जो खो चुके थे।",
+            "scene3": "आख़िरी ट्रेन छूटने से पहले तुमने मेरे हाथ में {k3} थमाई और कहा: 'मुझे वहीं ढूँढना जहाँ कहानी शुरू हुई थी।'",
+            "scene_titles": ["पहला अंक: मुलाक़ात", "दूसरा अंक: भीगी रात", "तीसरा अंक: विदाई"]
+        }
+    ]
+}
+
 def generate_short_movie_script(
     keyword1: str,
     keyword2: str,
     keyword3: str,
-    genre: str = "THRILLER"
+    genre: str = "THRILLER",
+    language: str = "en"
 ) -> dict:
     """
     Generates a 3-act short movie script based on 3 user-provided keywords.
@@ -121,18 +155,21 @@ def generate_short_movie_script(
     k2 = keyword2.strip() or "Lighthouse"
     k3 = keyword3.strip() or "Key"
     g = genre.upper() if genre.upper() in MOVIE_TEMPLATES else "THRILLER"
+    lang = language.lower() if language else "en"
 
     # Try Gemini API if key exists
     api_key = Config.GEMINI_API_KEY
     if api_key:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        lang_prompt = f"IMPORTANT: Write the entire script, scenes, titles, and caption in {lang.upper()} language!" if lang != "en" else ""
         prompt = (
             f"You are an acclaimed Hollywood cinematic micro-movie writer. "
             f"Write a riveting 3-act short movie based around these 3 keywords:\n"
             f"Keyword 1 (Inciting Incident): '{k1}'\n"
             f"Keyword 2 (Rising Action/Tension): '{k2}'\n"
             f"Keyword 3 (Climax/Twist): '{k3}'\n"
-            f"Genre: {g}\n\n"
+            f"Genre: {g}\n"
+            f"{lang_prompt}\n\n"
             f"Return ONLY a JSON object with keys:\n"
             f"- 'title': 2-4 words film title\n"
             f"- 'logline': one sentence cinematic premise\n"
@@ -154,13 +191,17 @@ def generate_short_movie_script(
                 movie_data = json.loads(raw_text)
                 movie_data["keywords"] = [k1, k2, k3]
                 movie_data["genre"] = g
+                movie_data["language"] = lang
                 return movie_data
         except Exception as e:
             print(f"[MovieGenerator] Gemini fallback: {e}")
 
     # Procedural Cinema Script Engine
-    templates = MOVIE_TEMPLATES.get(g, MOVIE_TEMPLATES["THRILLER"])
-    seed = int(hashlib.md5(f"{k1}_{k2}_{k3}_{g}".encode()).hexdigest(), 16)
+    if lang == "hi" and g in MOVIE_TEMPLATES_HI:
+        templates = MOVIE_TEMPLATES_HI[g]
+    else:
+        templates = MOVIE_TEMPLATES.get(g, MOVIE_TEMPLATES["THRILLER"])
+    seed = int(hashlib.md5(f"{k1}_{k2}_{k3}_{g}_{lang}".encode()).hexdigest(), 16)
     tmpl = templates[seed % len(templates)]
 
     scene1 = tmpl["scene1"].replace("{k1}", k1.lower()).replace("{k2}", k2.lower()).replace("{k3}", k3.lower())

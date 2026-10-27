@@ -20,9 +20,12 @@ __pycache__/
 ehthumbs.db
 Thumbs.db
 
-# Large Video Output (MP4 & MP3 binaries)
+# Large Video Output (MP4, MP3, JPG binaries & manifests)
 output/*.mp4
 output/*.mp3
+output/*.wav
+output/*.jpg
+output/*.json
 output/*.log
 output/voice_*.mp3
 output/reel_*.mp4

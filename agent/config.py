@@ -14,6 +14,7 @@ class Config:
     MUSIC_DIR = ASSETS_DIR / "music"
     AVATARS_DIR = ASSETS_DIR / "avatars"
     UPLOADS_DIR = ASSETS_DIR / "uploads"
+    SFX_DIR = ASSETS_DIR / "sfx"
     CUSTOM_AVATARS_FILE = ASSETS_DIR / "custom_characters.json"
     CUSTOM_VOICES_FILE = ASSETS_DIR / "custom_voices.json"
     
@@ -30,6 +31,7 @@ class Config:
     # Default Fallback Voice (Free Neural Voice)
     DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "ava_female")
     FALLBACK_TTS_VOICE = os.getenv("FALLBACK_TTS_VOICE", "en-US-AvaNeural")
+    DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "en")
     
     # Content Generation
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -39,11 +41,17 @@ class Config:
     BUFFER_PROFILE_ID = os.getenv("BUFFER_PROFILE_ID", "")
     WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
     
+    # Direct Social Auto-Publishing (Instagram Graph API & YouTube)
+    INSTAGRAM_ACCOUNT_ID = os.getenv("INSTAGRAM_ACCOUNT_ID", "")
+    INSTAGRAM_ACCESS_TOKEN = os.getenv("INSTAGRAM_ACCESS_TOKEN", "")
+    YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
+    
     # Video Specifications (Instagram Reels 9:16)
     VIDEO_WIDTH = int(os.getenv("VIDEO_WIDTH", "1080"))
     VIDEO_HEIGHT = int(os.getenv("VIDEO_HEIGHT", "1920"))
     VIDEO_FPS = int(os.getenv("VIDEO_FPS", "30"))
     BACKGROUND_MUSIC_VOLUME = float(os.getenv("BACKGROUND_MUSIC_VOLUME", "0.14"))
+    SFX_VOLUME = float(os.getenv("SFX_VOLUME", "0.22"))
     
     # Schedule Configuration
     SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
@@ -51,7 +59,17 @@ class Config:
     DEFAULT_AVATAR = os.getenv("DEFAULT_AVATAR", "female_innocent")
     SHOW_AVATAR = os.getenv("SHOW_AVATAR", "true").lower() == "true"
 
-    # Base Supported Neural Voices (Female & Male)
+    # Multi-Language Directory
+    SUPPORTED_LANGUAGES = {
+        "en": {"code": "en", "name": "English", "native": "English", "flag": "🇺🇸"},
+        "hi": {"code": "hi", "name": "Hindi", "native": "हिन्दी", "flag": "🇮🇳"},
+        "es": {"code": "es", "name": "Spanish", "native": "Español", "flag": "🇪🇸"},
+        "fr": {"code": "fr", "name": "French", "native": "Français", "flag": "🇫🇷"},
+        "de": {"code": "de", "name": "German", "native": "Deutsch", "flag": "🇩🇪"},
+        "ja": {"code": "ja", "name": "Japanese", "native": "日本語", "flag": "🇯🇵"},
+    }
+
+    # Base Supported Neural Voices (Female & Male across languages)
     _BASE_VOICES = {
         "ava_female": {
             "name": "Ava (Gentle & Innocent)",
@@ -107,7 +125,93 @@ class Config:
             "gender": "Male",
             "edge_id": "en-GB-RyanNeural",
             "eleven_id": "VR6AewLTigWG4xSOukaG",
-            "description": "Thoughtful, atmospheric British narrator"
+            "description": "Thoughtful, atmospheric British narrator",
+            "lang": "en"
+        },
+        # Hindi Voices (हिंदी)
+        "swara_hindi_female": {
+            "name": "Swara (Hindi Storyteller)",
+            "gender": "Female",
+            "edge_id": "hi-IN-SwaraNeural",
+            "eleven_id": "21m00Tcm4TlvDq8ikWAM",
+            "description": "Warm, expressive Hindi female storyteller",
+            "lang": "hi"
+        },
+        "madhur_hindi_male": {
+            "name": "Madhur (Hindi Narrator)",
+            "gender": "Male",
+            "edge_id": "hi-IN-MadhurNeural",
+            "eleven_id": "pNInz6obpgDQGcFmaJgB",
+            "description": "Deep, poetic Hindi male narrator",
+            "lang": "hi"
+        },
+        # Spanish Voices (Español)
+        "elvira_spanish_female": {
+            "name": "Elvira (Spanish Storyteller)",
+            "gender": "Female",
+            "edge_id": "es-ES-ElviraNeural",
+            "eleven_id": "EXAVITQu4vr4xnSDxMaL",
+            "description": "Heartfelt, evocative Spanish female voice",
+            "lang": "es"
+        },
+        "alvaro_spanish_male": {
+            "name": "Alvaro (Spanish Cinematic)",
+            "gender": "Male",
+            "edge_id": "es-ES-AlvaroNeural",
+            "eleven_id": "TxGEqnHWrfWFTfGW9XjX",
+            "description": "Vibrant, confident Spanish narrator",
+            "lang": "es"
+        },
+        # French Voices (Français)
+        "denise_french_female": {
+            "name": "Denise (French Poetic)",
+            "gender": "Female",
+            "edge_id": "fr-FR-DeniseNeural",
+            "eleven_id": "ThT5KcBeYPX3keUQqHPh",
+            "description": "Soft, elegant French female storyteller",
+            "lang": "fr"
+        },
+        "henri_french_male": {
+            "name": "Henri (French Cinematic)",
+            "gender": "Male",
+            "edge_id": "fr-FR-HenriNeural",
+            "eleven_id": "pNInz6obpgDQGcFmaJgB",
+            "description": "Authoritative French cinematic narrator",
+            "lang": "fr"
+        },
+        # German Voices (Deutsch)
+        "katja_german_female": {
+            "name": "Katja (German Clear)",
+            "gender": "Female",
+            "edge_id": "de-DE-KatjaNeural",
+            "eleven_id": "AZnzlk1XvdvUeBnXmlld",
+            "description": "Warm, clear German storyteller",
+            "lang": "de"
+        },
+        "conrad_german_male": {
+            "name": "Conrad (German Resonant)",
+            "gender": "Male",
+            "edge_id": "de-DE-ConradNeural",
+            "eleven_id": "pNInz6obpgDQGcFmaJgB",
+            "description": "Deep, calm German narrator",
+            "lang": "de"
+        },
+        # Japanese Voices (日本語)
+        "nanami_japanese_female": {
+            "name": "Nanami (Japanese Serene)",
+            "gender": "Female",
+            "edge_id": "ja-JP-NanamiNeural",
+            "eleven_id": "21m00Tcm4TlvDq8ikWAM",
+            "description": "Gentle, atmospheric Japanese storyteller",
+            "lang": "ja"
+        },
+        "keita_japanese_male": {
+            "name": "Keita (Japanese Dynamic)",
+            "gender": "Male",
+            "edge_id": "ja-JP-KeitaNeural",
+            "eleven_id": "TxGEqnHWrfWFTfGW9XjX",
+            "description": "Inspiring, confident Japanese narrator",
+            "lang": "ja"
         }
     }
 
@@ -247,5 +351,6 @@ class Config:
         cls.MUSIC_DIR.mkdir(parents=True, exist_ok=True)
         cls.AVATARS_DIR.mkdir(parents=True, exist_ok=True)
         cls.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        cls.SFX_DIR.mkdir(parents=True, exist_ok=True)
 
 Config.ensure_dirs()

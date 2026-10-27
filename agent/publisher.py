@@ -117,3 +117,103 @@ class SocialPublisher:
 
         cls.record_manifest(video_path, script_data, voice_data, publish_status=results["status"])
         return results
+
+    @classmethod
+    def publish_instagram_graph(cls, video_url: str, caption: str, cover_url: str = "") -> dict:
+        """
+        Direct publishing to Instagram Business / Creator via Facebook Graph API v19.0:
+        Step 1: POST /{ig-user-id}/media (create reel container)
+        Step 2: POST /{ig-user-id}/media_publish (publish container)
+        """
+        account_id = Config.INSTAGRAM_ACCOUNT_ID
+        access_token = Config.INSTAGRAM_ACCESS_TOKEN
+
+        if not account_id or not access_token:
+            return {
+                "success": False,
+                "provider": "Instagram Graph API",
+                "message": "Instagram Graph API credentials missing. Set INSTAGRAM_ACCOUNT_ID and INSTAGRAM_ACCESS_TOKEN in Studio Settings."
+            }
+
+        container_url = f"https://graph.facebook.com/v19.0/{account_id}/media"
+        params = {
+            "media_type": "REELS",
+            "video_url": video_url,
+            "caption": caption,
+            "access_token": access_token
+        }
+        if cover_url:
+            params["cover_url"] = cover_url
+
+        try:
+            # Step 1: Create Container
+            res = requests.post(container_url, data=params, timeout=30)
+            res_data = res.json()
+            if "id" not in res_data:
+                return {
+                    "success": False,
+                    "provider": "Instagram Graph API",
+                    "error": f"Failed to create media container: {res_data.get('error', {}).get('message', res.text)}"
+                }
+
+            container_id = res_data["id"]
+
+            # Step 2: Publish Container
+            publish_url = f"https://graph.facebook.com/v19.0/{account_id}/media_publish"
+            pub_res = requests.post(publish_url, data={"creation_id": container_id, "access_token": access_token}, timeout=30)
+            pub_data = pub_res.json()
+
+            if "id" in pub_data:
+                return {
+                    "success": True,
+                    "provider": "Instagram Graph API",
+                    "media_id": pub_data["id"],
+                    "container_id": container_id,
+                    "message": "Reel successfully published live on Instagram!"
+                }
+            else:
+                return {
+                    "success": False,
+                    "provider": "Instagram Graph API",
+                    "container_id": container_id,
+                    "error": f"Publish step failed: {pub_data.get('error', {}).get('message', pub_res.text)}"
+                }
+        except Exception as e:
+            return {"success": False, "provider": "Instagram Graph API", "error": f"Graph API error: {str(e)}"}
+
+    @classmethod
+    def generate_youtube_manifest(cls, video_path: str, script_data: dict) -> dict:
+        """
+        Generates upload-ready YouTube Shorts metadata manifest (.youtube.json)
+        formatted for Google YouTube Data API v3.
+        """
+        p = Path(video_path)
+        title = script_data.get("topic") or script_data.get("title") or "Viral Reel"
+        title = f"{title[:70]} #Shorts"
+        tags = ["Shorts", "Viral", "Reels", script_data.get("category", "Motivation").lower()]
+        
+        manifest = {
+            "snippet": {
+                "title": title,
+                "description": f"{script_data.get('script', '')}\n\n{script_data.get('caption', '')}\n\n#Shorts #Viral #Storytelling",
+                "tags": tags,
+                "categoryId": "22",  # People & Blogs
+                "defaultLanguage": "en"
+            },
+            "status": {
+                "privacyStatus": "public",
+                "selfDeclaredMadeForKids": False
+            },
+            "video_file": str(p.resolve())
+        }
+
+        yt_manifest_path = p.with_suffix(".youtube.json")
+        with open(yt_manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+        return {
+            "success": True,
+            "manifest_file": yt_manifest_path.name,
+            "manifest": manifest,
+            "message": f"YouTube Shorts package generated: {yt_manifest_path.name}"
+        }

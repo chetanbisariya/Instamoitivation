@@ -35,12 +35,13 @@ class DailyReelAgent:
         avatar_key: str = "",
         topic: str = "",
         custom_prompt: str = "",
-        date_str: str = None
+        date_str: str = None,
+        language: str = "en"
     ) -> dict:
         """
         Executes complete multi-genre video reel pipeline:
-        1. Script & Caption generation for the selected category
-        2. Neural Voiceover synthesis (Girl / Male options)
+        1. Script & Caption generation for the selected category & language
+        2. Neural Voiceover synthesis (Girl / Male options, native language)
         3. 1080x1920 Reel rendering with Audio-Reactive Avatar Aura & Waveform
         4. Social Dispatch / Queueing
         """
@@ -59,13 +60,13 @@ class DailyReelAgent:
 
         timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         print(f"\n[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] --- Starting Story Reel Pipeline ---")
-        print(f"  Category: {cat} ({cat_info['label']})")
+        print(f"  Category: {cat} ({cat_info['label']}) | Language: {language}")
         print(f"  Voice: {selected_voice}")
         print(f"  Avatar: {selected_avatar or 'Hidden'}")
 
         # 1. Script Generation
-        print("[1/4] Generating story script and caption...")
-        script_data = get_daily_script(category=cat, date_str=date_str, topic=topic, custom_prompt=custom_prompt)
+        print(f"[1/4] Generating story script and caption ({language.upper()})...")
+        script_data = get_daily_script(category=cat, date_str=date_str, topic=topic, custom_prompt=custom_prompt, language=language)
         print(f"      Topic: {script_data.get('topic')}")
         print(f"      Author: {script_data.get('author')}")
         print(f"      Hook: \"{script_data.get('hook')}\"")
@@ -101,6 +102,7 @@ class DailyReelAgent:
             "video_path": video_path,
             "video_filename": video_filename,
             "category": cat,
+            "language": language,
             "voice_data": voice_data,
             "avatar_key": selected_avatar,
             "script_data": script_data,
@@ -117,7 +119,8 @@ class DailyReelAgent:
         keyword3: str,
         genre: str = "THRILLER",
         voice_key: str = "",
-        avatar_key: str = ""
+        avatar_key: str = "",
+        language: str = "en"
     ) -> dict:
         """
         Generates a 3-act cinematic short movie from 3 user keywords:
@@ -137,13 +140,13 @@ class DailyReelAgent:
 
         timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         print(f"\n[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] --- Starting 3-Keyword Short Movie Pipeline ---")
-        print(f"  Keywords: [{k1}, {k2}, {k3}]")
+        print(f"  Keywords: [{k1}, {k2}, {k3}] | Language: {language}")
         print(f"  Genre: {g}")
         print(f"  Voice: {selected_voice} | Avatar: {selected_avatar or 'Hidden'}")
 
         # 1. Generate 3-Act Script
-        print("[1/4] Generating 3-act cinematic script and act breakdown...")
-        movie_data = generate_short_movie_script(keyword1=k1, keyword2=k2, keyword3=k3, genre=g)
+        print(f"[1/4] Generating 3-act cinematic script and act breakdown ({language.upper()})...")
+        movie_data = generate_short_movie_script(keyword1=k1, keyword2=k2, keyword3=k3, genre=g, language=language)
         print(f"      Film Title: \"{movie_data.get('title')}\"")
         print(f"      Logline: {movie_data.get('logline')}")
         print(f"      Act Breakdown: {movie_data.get('scene_titles')}")
@@ -247,6 +250,7 @@ def main():
     parser.add_argument("--k2", type=str, default="Lighthouse", help="Keyword 2 (Rising Conflict)")
     parser.add_argument("--k3", type=str, default="Key", help="Keyword 3 (Climax / Twist)")
     parser.add_argument("--genre", type=str, default="THRILLER", help="Short movie genre: THRILLER, SCI-FI, ADVENTURE, ROMANTIC, NOIR")
+    parser.add_argument("--lang", type=str, default="en", help="Language: en, hi, es, fr, de, ja")
     
     args = parser.parse_args()
 
@@ -259,7 +263,8 @@ def main():
             keyword3=args.k3,
             genre=args.genre,
             voice_key=args.voice,
-            avatar_key=args.avatar
+            avatar_key=args.avatar,
+            language=args.lang
         )
     elif args.schedule is not None:
         sched_time = args.schedule if args.schedule else Config.SCHEDULE_TIME
@@ -270,7 +275,8 @@ def main():
             voice_key=args.voice,
             avatar_key=args.avatar,
             topic=args.topic,
-            custom_prompt=args.prompt
+            custom_prompt=args.prompt,
+            language=args.lang
         )
 
 if __name__ == "__main__":

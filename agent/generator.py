@@ -177,7 +177,106 @@ def generate_with_gemini(category: str = "MOTIVATION", prompt_override: str = ""
         "'hashtags' (array of 12 viral hashtags)."
     )
 
-    user_prompt = prompt_override if prompt_override else f"Write a captivating {cat} micro-story for Instagram Reels."
+MULTILINGUAL_SCRIPTS = {
+    "hi": {
+        "MOTIVATION": [
+            {
+                "topic": "अटूट संकल्प",
+                "author": "स्वामी विवेकानंद",
+                "hook": "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए।",
+                "body": "मंज़िल उन्हीं को मिलती है जिनके सपनों में जान होती है। पंखों से कुछ नहीं होता, हौसलों से उड़ान होती है। अपने मन को वश में करो, दुनिया तुम्हारे कदमों में होगी।",
+                "script": "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए। मंज़िल उन्हीं को मिलती है जिनके सपनों में जान होती है। पंखों से कुछ नहीं होता, हौसलों से उड़ान होती है। अपने मन को वश में करो, दुनिया तुम्हारे कदमों में होगी।",
+                "reflection": "सफलता केवल उनके लिए है जो कभी हार नहीं मानते।"
+            }
+        ],
+        "ROMANTIC": [
+            {
+                "topic": "खामोश मोहब्बत",
+                "author": "गुलज़ार की यादें",
+                "hook": "कुछ मुलाकातें लफ़्ज़ों की मोहताज नहीं होतीं।",
+                "body": "जब आँखें मिलती हैं, तो खामोशी भी दास्तान बन जाती है। बारिश की बूँदों में तुम्हारी वो पुरानी मुस्कान आज भी ताज़ा है।",
+                "script": "कुछ मुलाकातें लफ़्ज़ों की मोहताज नहीं होतीं। जब आँखें मिलती हैं, तो खामोशी भी दास्तान बन जाती है। बारिश की बूँदों में तुम्हारी वो पुरानी मुस्कान आज भी ताज़ा है।",
+                "reflection": "सच्चा प्यार समय और दूरी से परे होता है।"
+            }
+        ],
+        "THRILLER": [
+            {
+                "topic": "आधी रात का राज़",
+                "author": "अनाम कथाकार",
+                "hook": "रात के तीन बजे जब दरवाज़ा खटखटाया गया...",
+                "body": "बाहर कोई नहीं था, सिर्फ ज़मीन पर एक पुरानी खून से सनी चाबी पड़ी थी। और फिर सीढ़ियों से किसी के कदमों की आवाज़ आने लगी।",
+                "script": "रात के तीन बजे जब दरवाज़ा खटखटाया गया, बाहर कोई नहीं था, सिर्फ ज़मीन पर एक पुरानी चाबी पड़ी थी। और फिर सीढ़ियों से किसी के कदमों की आवाज़ आने लगी।",
+                "reflection": "कुछ दरवाज़े कभी नहीं खोलने चाहिए।"
+            }
+        ],
+        "ADVENTURE": [
+            {
+                "topic": "हिमालय का रहस्य",
+                "author": "पर्वत यात्री",
+                "hook": "नक्शा जहाँ खत्म होता है, असली सफ़र वहीं से शुरू होता है।",
+                "body": "बर्फानी तूफ़ान के बीच हमें वो प्राचीन गुफा दिखाई दी। उस गुफा के अंदर सदियों से खोया हुआ एक सुनहरा मंदिर चमक रहा था।",
+                "script": "नक्शा जहाँ खत्म होता है, असली सफ़र वहीं से शुरू होता है। बर्फानी तूफ़ान के बीच हमें वो प्राचीन गुफा दिखाई दी। उस गुफा के अंदर सदियों से खोया हुआ मंदिर चमक रहा था।",
+                "reflection": "साहस ही सबसे बड़ा मार्गदर्शक है।"
+            }
+        ],
+        "WISDOM": [
+            {
+                "topic": "मौन की शक्ति",
+                "author": "प्राचीन उपदेश",
+                "hook": "क्रोध में बोला गया एक शब्द वर्षों का विश्वास तोड़ सकता है।",
+                "body": "शांत जल में ही आकाश का असली प्रतिबिंब दिखाई देता है। अपने मन को शांत रखो, हर उलझन का हल स्वयं मिल जाएगा।",
+                "script": "क्रोध में बोला गया एक शब्द वर्षों का विश्वास तोड़ सकता है। शांत जल में ही आकाश का असली प्रतिबिंब दिखाई देता है। अपने मन को शांत रखो, हर उलझन का हल स्वयं मिल जाएगा।",
+                "reflection": "मौन ही सबसे बड़ा उत्तर है।"
+            }
+        ]
+    },
+    "es": {
+        "MOTIVATION": [
+            {
+                "topic": "ENFOQUE IMPARABLE",
+                "author": "Marco Aurelio",
+                "hook": "Tienes poder sobre tu mente, no sobre los eventos externos.",
+                "body": "Reconoce esto y encontrarás una fuerza inquebrantable. La disciplina vence al talento cuando el talento no se disciplina.",
+                "script": "Tienes poder sobre tu mente, no sobre los eventos externos. Reconoce esto y encontrarás una fuerza inquebrantable. La disciplina vence al talento cuando el talento no se disciplina.",
+                "reflection": "El autodominio es la mayor de las victorias."
+            }
+        ],
+        "ROMANTIC": [
+            {
+                "topic": "MEMORIAS BAJO LA LLUVIA",
+                "author": "Prosa Nocturna",
+                "hook": "Hay miradas que guardan secretos que las palabras jamás podrán explicar.",
+                "body": "Caminamos por la ciudad vacía mientras la lluvia borraba nuestras dudas. Antes de partir, dejaste tu promesa en mi corazón.",
+                "script": "Hay miradas que guardan secretos que las palabras jamás podrán explicar. Caminamos por la ciudad vacía mientras la lluvia borraba nuestras dudas. Antes de partir, dejaste tu promesa en mi corazón.",
+                "reflection": "El amor verdadero no se olvida."
+            }
+        ]
+    }
+}
+
+def generate_with_gemini(category: str = "MOTIVATION", prompt_override: str = "", language: str = "en") -> dict | None:
+    api_key = Config.GEMINI_API_KEY
+    if not api_key:
+        return None
+
+    cat = category.upper()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    lang_instruction = f"IMPORTANT: Write the story, hook, body, script, and caption completely in {language.upper()} language!" if language != "en" else ""
+    system_instruction = (
+        f"You are an acclaimed viral Instagram storyteller. Write a 9:16 high-retention reel script for category: {cat}.\n"
+        f"{lang_instruction}\n"
+        f"Return ONLY valid JSON matching this schema:\n"
+        f"- 'topic': 2-4 words title in uppercase\n"
+        f"- 'author': author or speaker persona\n"
+        f"- 'hook': punchy opening line under 12 words\n"
+        f"- 'body': 2-3 engaging storytelling sentences\n"
+        f"- 'script': hook + body combined (under 50 words total)\n"
+        f"- 'caption': complete Instagram caption with question and 10 hashtags\n"
+        f"- 'hashtags': array of 8-12 hashtag strings."
+    )
+
+    user_prompt = prompt_override if prompt_override else f"Write a captivating {cat} micro-story for Instagram Reels in {language}."
     payload = {
         "contents": [{"parts": [{"text": f"{system_instruction}\n\nUser request: {user_prompt}"}]}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.85}
@@ -192,16 +291,34 @@ def generate_with_gemini(category: str = "MOTIVATION", prompt_override: str = ""
         print(f"[Generator] Gemini API error: {e}")
     return None
 
-def get_daily_script(category: str = "MOTIVATION", date_str: str = None, topic: str = "", custom_prompt: str = "") -> dict:
+def get_daily_script(
+    category: str = "MOTIVATION",
+    date_str: str = None,
+    topic: str = "",
+    custom_prompt: str = "",
+    language: str = "en"
+) -> dict:
     cat = category.upper() if category.upper() in CATEGORY_SCRIPTS else "MOTIVATION"
+    lang = language.lower() if language else "en"
 
     if custom_prompt or (Config.GEMINI_API_KEY and random.random() > 0.4):
-        ai_res = generate_with_gemini(category=cat, prompt_override=custom_prompt or topic)
+        ai_res = generate_with_gemini(category=cat, prompt_override=custom_prompt or topic, language=lang)
         if ai_res and "script" in ai_res:
             ai_res["category"] = cat
             if not ai_res.get("hashtags"):
                 ai_res["hashtags"] = CATEGORY_HASHTAGS.get(cat, CATEGORY_HASHTAGS["MOTIVATION"])
             return ai_res
+
+    # Check multilingual templates
+    if lang in MULTILINGUAL_SCRIPTS and cat in MULTILINGUAL_SCRIPTS[lang]:
+        lang_scripts = MULTILINGUAL_SCRIPTS[lang][cat]
+        item = lang_scripts[0].copy()
+        item["category"] = cat
+        if topic: item["topic"] = topic.upper()
+        hashtags = CATEGORY_HASHTAGS.get(cat, CATEGORY_HASHTAGS["MOTIVATION"])
+        item["caption"] = f"{item['hook']}\n\n{item['body']}\n\n— {item['author']}\n\n{' '.join(hashtags)}"
+        item["hashtags"] = hashtags
+        return item
 
     if not date_str:
         date_str = datetime.date.today().isoformat()

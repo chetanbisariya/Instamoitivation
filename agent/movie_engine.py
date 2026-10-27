@@ -4,11 +4,13 @@ import subprocess
 import time
 from pathlib import Path
 import numpy as np
+from scipy.io import wavfile
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 import imageio_ffmpeg
 
 from agent.config import Config
 from agent.visualizer import AudioSpectrumVisualizer
+from agent.thumbnail_engine import ThumbnailEngine
 
 GENRE_PALETTES = {
     "THRILLER": {
@@ -80,6 +82,32 @@ class MovieEngine:
             default_font = ImageFont.load_default()
             fonts = {k: default_font for k in ["badge", "title", "act_header", "keyword_pill", "dialogue_large", "dialogue_medium", "meta", "timeline"]}
         return fonts
+
+    def _get_font(self, font_key: str, text: str = ""):
+        if text and any(ord(c) > 127 for c in text):
+            u_paths = [
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/Library/Fonts/Arial Unicode.ttf",
+                "/System/Library/Fonts/Supplemental/DevanagariMT.ttc"
+            ]
+            sizes = {
+                "badge": 22,
+                "title": 48,
+                "act_header": 32,
+                "keyword_pill": 22,
+                "dialogue_large": 42,
+                "dialogue_medium": 34,
+                "meta": 20,
+                "timeline": 18
+            }
+            sz = sizes.get(font_key, 28)
+            for up in u_paths:
+                if os.path.exists(up):
+                    try:
+                        return ImageFont.truetype(up, sz)
+                    except Exception:
+                        pass
+        return self.fonts.get(font_key, self.fonts["badge"])
 
     def _preload_avatars(self) -> dict:
         avatars = {}
@@ -180,12 +208,13 @@ class MovieEngine:
         # 4. Film Title (e.g. "THE SILENT PROTOCOL")
         title_y = top_y + 48
         film_title = movie_data.get("title", "UNTITLED SHORT").upper()
-        t_box = draw.textbbox((0, 0), film_title, font=self.fonts["title"])
+        t_font = self._get_font("title", film_title)
+        t_box = draw.textbbox((0, 0), film_title, font=t_font)
         t_w = t_box[2] - t_box[0]
         t_x = (self.width - t_w) // 2
         # Title drop shadow
-        draw.text((t_x + 2, title_y + 2), film_title, font=self.fonts["title"], fill=(0, 0, 0))
-        draw.text((t_x, title_y), film_title, font=self.fonts["title"], fill=(255, 255, 255))
+        draw.text((t_x + 2, title_y + 2), film_title, font=t_font, fill=(0, 0, 0))
+        draw.text((t_x, title_y), film_title, font=t_font, fill=(255, 255, 255))
 
         # 5. 3-Keyword Interactive Track Bar
         keywords = movie_data.get("keywords", ["Word 1", "Word 2", "Word 3"])
@@ -229,19 +258,21 @@ class MovieEngine:
             )
 
             pill_label = f"{prefix} {kw.upper()}"
-            pk_box = draw.textbbox((0, 0), pill_label, font=self.fonts["keyword_pill"])
+            pk_font = self._get_font("keyword_pill", pill_label)
+            pk_box = draw.textbbox((0, 0), pill_label, font=pk_font)
             pk_w = pk_box[2] - pk_box[0]
-            draw.text((px + (pill_w - pk_w) // 2, pills_y + 8), pill_label, font=self.fonts["keyword_pill"], fill=text_color)
+            draw.text((px + (pill_w - pk_w) // 2, pills_y + 8), pill_label, font=pk_font, fill=text_color)
 
         # 6. Current Act Title Banner (e.g. "ACT II: THE VAULT")
         act_banner_y = pills_y + 68
         current_act_title = act_info.get("act_title", f"ACT {current_act_num}").upper()
-        act_box = draw.textbbox((0, 0), current_act_title, font=self.fonts["act_header"])
+        act_font = self._get_font("act_header", current_act_title)
+        act_box = draw.textbbox((0, 0), current_act_title, font=act_font)
         act_w = act_box[2] - act_box[0]
         act_x = (self.width - act_w) // 2
 
         # Glowing act tag banner
-        draw.text((act_x, act_banner_y), current_act_title, font=self.fonts["act_header"], fill=palette["accent"])
+        draw.text((act_x, act_banner_y), current_act_title, font=act_font, fill=palette["accent"])
 
         # 7. Cinematic Avatar / Narrator Portrait with Audio-Reactive Aura
         avg_energy = float(np.mean(visualizer_bars)) if len(visualizer_bars) > 0 else 0.0
@@ -295,10 +326,11 @@ class MovieEngine:
         # Subtitles for the CURRENT ACT only, with kinetic word illumination!
         dialogue_words = act_info.get("words", [])
         word_lines = act_info.get("word_lines", [])
-        font_d = self.fonts["dialogue_large"] if len(dialogue_words) <= 16 else self.fonts["dialogue_medium"]
+        all_diag_text = " ".join(dialogue_words)
+        font_d = self._get_font("dialogue_large" if len(dialogue_words) <= 16 else "dialogue_medium", all_diag_text)
         
         subtitles_box_top = vis_y + 55
-        line_height = 56 if font_d == self.fonts["dialogue_large"] else 46
+        line_height = 54 if len(dialogue_words) <= 16 else 44
         total_text_h = len(word_lines) * line_height
         start_text_y = subtitles_box_top + (260 - total_text_h) // 2
 
@@ -386,7 +418,7 @@ class MovieEngine:
 
         # 11. Footer: Instagram Watermark & Movie Tag
         footer_y = self.height - 140
-        handle_text = f"@{Config.INSTAGRAM_HANDLE}"
+        handle_text = Config.INSTAGRAM_HANDLE if Config.INSTAGRAM_HANDLE.startswith("@") else f"@{Config.INSTAGRAM_HANDLE}"
         h_box = draw.textbbox((0, 0), handle_text, font=self.fonts["badge"])
         h_w = h_box[2] - h_box[0]
         draw.text(((self.width - h_w) // 2, footer_y), handle_text, font=self.fonts["badge"], fill=(180, 190, 210))
@@ -445,61 +477,179 @@ class MovieEngine:
         s3_lines = self._wrap_text_to_lines(words_s3, font_d, max_dialogue_w)
 
         visualizer = AudioSpectrumVisualizer(audio_file, num_bars=38, fps=self.fps)
+    def _build_cinematic_audio(
+        self,
+        voice_path: str,
+        bg_music_path: str,
+        duration: float,
+        act1_end: float,
+        act2_end: float,
+        output_wav: str
+    ) -> str:
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        sr = 44100
+        total_samples = int(duration * sr)
+
+        # 1. Convert voice to 44.1kHz stereo WAV
+        temp_voice = str(Path(output_wav).parent / f"temp_voice_{os.getpid()}_{int(time.time())}.wav")
+        subprocess.run([
+            ffmpeg_exe, "-y", "-i", voice_path, "-ar", str(sr), "-ac", "2", temp_voice
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+        _, voice_raw = wavfile.read(temp_voice)
+        voice_arr = voice_raw.astype(np.float32) / 32768.0
+        if len(voice_arr.shape) == 1:
+            voice_arr = np.column_stack((voice_arr, voice_arr))
+        if len(voice_arr) < total_samples:
+            pad = np.zeros((total_samples - len(voice_arr), 2), dtype=np.float32)
+            voice_arr = np.vstack((voice_arr, pad))
+        else:
+            voice_arr = voice_arr[:total_samples]
+
+        # 2. Convert and loop background music
+        music_vol = Config.BACKGROUND_MUSIC_VOLUME
+        music_arr = np.zeros((total_samples, 2), dtype=np.float32)
+        if bg_music_path and os.path.exists(bg_music_path):
+            temp_music = str(Path(output_wav).parent / f"temp_music_{os.getpid()}_{int(time.time())}.wav")
+            subprocess.run([
+                ffmpeg_exe, "-y", "-i", bg_music_path, "-ar", str(sr), "-ac", "2", temp_music
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if os.path.exists(temp_music):
+                try:
+                    _, m_raw = wavfile.read(temp_music)
+                    m_f = m_raw.astype(np.float32) / 32768.0
+                    if len(m_f.shape) == 1:
+                        m_f = np.column_stack((m_f, m_f))
+                    if len(m_f) > 0:
+                        repeats = int(np.ceil(total_samples / len(m_f)))
+                        music_arr = np.tile(m_f, (repeats, 1))[:total_samples] * music_vol
+                except Exception:
+                    pass
+                try: os.remove(temp_music)
+                except Exception: pass
+
+        # 3. Layer SFX Foley Stems
+        sfx_vol = Config.SFX_VOLUME
+        sfx_tracks = [
+            ("sfx_sub_bass.wav", 0.1, 0.28),
+            ("sfx_whoosh.wav", max(0.1, act1_end - 0.5), 0.25),
+            ("sfx_riser.wav", max(0.1, act2_end - 2.5), 0.22),
+            ("sfx_impact.wav", act2_end, 0.32)
+        ]
+
+        master = voice_arr * 0.95 + music_arr
+        for sfx_name, start_sec, vol_mult in sfx_tracks:
+            sfx_file = Config.SFX_DIR / sfx_name
+            if sfx_file.exists():
+                try:
+                    _, sfx_raw = wavfile.read(str(sfx_file))
+                    sfx_f = sfx_raw.astype(np.float32) / 32768.0
+                    if len(sfx_f.shape) == 1:
+                        sfx_f = np.column_stack((sfx_f, sfx_f))
+                    start_idx = int(start_sec * sr)
+                    end_idx = min(total_samples, start_idx + len(sfx_f))
+                    actual_len = end_idx - start_idx
+                    if actual_len > 0 and start_idx < total_samples:
+                        master[start_idx:end_idx] += sfx_f[:actual_len] * (sfx_vol * vol_mult * 3.5)
+                except Exception as e:
+                    print(f"[MovieEngine] SFX mix error on {sfx_name}: {e}")
+
+        master = np.clip(master, -0.98, 0.98)
+        wav_master = (master * 32767).astype(np.int16)
+        wavfile.write(output_wav, sr, wav_master)
+
+        try: os.remove(temp_voice)
+        except Exception: pass
+
+        return output_wav
+
+    def render_movie(
+        self,
+        movie_data: dict,
+        voice_data: dict,
+        output_mp4: str,
+        avatar_key: str = "female_innocent",
+        genre: str = "THRILLER"
+    ) -> str:
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        audio_file = voice_data["audio_path"]
+        duration = voice_data["duration"]
+        word_timings = voice_data.get("word_timings", [])
+        total_frames = int(duration * self.fps)
+
+        g = genre.upper() if genre.upper() in GENRE_PALETTES else "THRILLER"
+        palette = GENRE_PALETTES[g]
+
+        # Break script into Act 1, Act 2, Act 3
+        scene1 = movie_data.get("scene1", "")
+        scene2 = movie_data.get("scene2", "")
+        scene3 = movie_data.get("scene3", "")
+        scene_titles = movie_data.get("scene_titles", ["ACT I: INCIDENT", "ACT II: CONFLICT", "ACT III: CLIMAX"])
+
+        words_s1 = scene1.split()
+        words_s2 = scene2.split()
+        words_s3 = scene3.split()
+        total_word_count = max(1, len(words_s1) + len(words_s2) + len(words_s3))
+
+        # Calculate time boundaries for each act
+        dur1 = (len(words_s1) / total_word_count) * duration
+        dur2 = (len(words_s2) / total_word_count) * duration
+        act1_end = dur1
+        act2_end = dur1 + dur2
+
+        timings_dict = {}
+        for wt in word_timings:
+            cw = wt["word"].lower().strip(".,!?;:\"'")
+            timings_dict[cw] = wt
+
+        # Pre-wrap word lines for each act
+        font_d = self.fonts["dialogue_large"]
+        max_dialogue_w = 860
+        s1_lines = self._wrap_text_to_lines(words_s1, font_d, max_dialogue_w)
+        s2_lines = self._wrap_text_to_lines(words_s2, font_d, max_dialogue_w)
+        s3_lines = self._wrap_text_to_lines(words_s3, font_d, max_dialogue_w)
+
+        visualizer = AudioSpectrumVisualizer(audio_file, num_bars=38, fps=self.fps)
         avatar_img = self.get_avatar_image(avatar_key)
 
         bg_music = str(Config.MUSIC_DIR / palette["music"])
         has_bg_music = os.path.exists(bg_music)
 
+        # Master Foley + Soundtrack Mixing
+        master_audio_wav = str(Path(output_mp4).with_suffix(".master.wav"))
+        self._build_cinematic_audio(
+            voice_path=audio_file,
+            bg_music_path=bg_music if has_bg_music else "",
+            duration=duration,
+            act1_end=act1_end,
+            act2_end=act2_end,
+            output_wav=master_audio_wav
+        )
+
         print(f"[MovieEngine] 🎬 Rendering 3-Keyword Short Movie: '{movie_data.get('title')}'")
-        print(f"[MovieEngine] Genre: {g} | Avatar: {avatar_key} | Duration: {duration:.2f}s ({total_frames} frames)")
+        print(f"[MovieEngine] Genre: {g} | Avatar: {avatar_key} | Duration: {duration:.2f}s ({total_frames} frames) with SFX Foley")
         start_t = time.time()
 
-        if has_bg_music:
-            music_vol = Config.BACKGROUND_MUSIC_VOLUME
-            ffmpeg_cmd = [
-                ffmpeg_exe, "-y",
-                "-f", "rawvideo",
-                "-vcodec", "rawvideo",
-                "-s", f"{self.width}x{self.height}",
-                "-pix_fmt", "rgb24",
-                "-r", str(self.fps),
-                "-i", "-",
-                "-i", audio_file,
-                "-stream_loop", "-1", "-i", bg_music,
-                "-filter_complex",
-                f"[2:a]volume={music_vol}[bg];[1:a][bg]amix=inputs=2:duration=first:dropout_transition=2[aout]",
-                "-map", "0:v",
-                "-map", "[aout]",
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-crf", "21",
-                "-pix_fmt", "yuv420p",
-                "-c:a", "aac",
-                "-b:a", "192k",
-                "-shortest",
-                output_mp4
-            ]
-        else:
-            ffmpeg_cmd = [
-                ffmpeg_exe, "-y",
-                "-f", "rawvideo",
-                "-vcodec", "rawvideo",
-                "-s", f"{self.width}x{self.height}",
-                "-pix_fmt", "rgb24",
-                "-r", str(self.fps),
-                "-i", "-",
-                "-i", audio_file,
-                "-map", "0:v",
-                "-map", "1:a",
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-crf", "21",
-                "-pix_fmt", "yuv420p",
-                "-c:a", "aac",
-                "-b:a", "192k",
-                "-shortest",
-                output_mp4
-            ]
+        ffmpeg_cmd = [
+            ffmpeg_exe, "-y",
+            "-f", "rawvideo",
+            "-vcodec", "rawvideo",
+            "-s", f"{self.width}x{self.height}",
+            "-pix_fmt", "rgb24",
+            "-r", str(self.fps),
+            "-i", "-",
+            "-i", master_audio_wav,
+            "-map", "0:v",
+            "-map", "1:a",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "21",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-shortest",
+            output_mp4
+        ]
 
         proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
@@ -561,6 +711,24 @@ class MovieEngine:
 
         if proc.returncode != 0:
             raise RuntimeError(f"FFmpeg movie encoding failed: {stderr_output.decode('utf-8', errors='ignore')}")
+
+        # Clean up temporary master audio
+        try: os.remove(master_audio_wav)
+        except Exception: pass
+
+        # Generate Matching 1080x1920 Cover Thumbnail for Instagram Grid
+        cover_path = str(Path(output_mp4).parent / f"cover_{Path(output_mp4).stem}.jpg")
+        try:
+            ThumbnailEngine().generate_cover(
+                title=movie_data.get("title", "Short Movie"),
+                category=f"MOVIE_{g}",
+                hook=movie_data.get("logline", ""),
+                keywords=movie_data.get("keywords", []),
+                avatar_key=avatar_key,
+                output_path=cover_path
+            )
+        except Exception as te:
+            print(f"[MovieEngine] Cover thumbnail generation error: {te}")
 
         elapsed = time.time() - start_t
         fps_rendered = total_frames / max(elapsed, 0.001)

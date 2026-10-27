@@ -1,6 +1,6 @@
 # ⚡ Instagram Multi-Story, Motivation & 3-Keyword Cinema Agent
 
-An autonomous AI agent and interactive Web Studio that generates daily high-retention 9:16 vertical reels (1080x1920) across **Multi-Genre Storytelling** (Motivation, Adventure, Romantic, Thriller, Wisdom), **3-Keyword Cinematic Micro-Movies**, **Photorealistic Innocent Narrator Avatars with Audio-Reactive Glow**, **Natural Girl & Male Neural Voices**, and **Custom Character / Voice Cloning Uploads (Creator Lab)**.
+An autonomous AI agent and interactive Web Studio that generates daily high-retention 9:16 vertical reels (1080x1920) across **Multi-Genre Storytelling** (Motivation, Adventure, Romantic, Thriller, Wisdom), **3-Keyword Cinematic Micro-Movies**, **Dynamic SFX Foley Audio Engine**, **Multilingual Studio (6 Languages)**, **Clickbait Cover Thumbnail Generator**, **In-Browser Live Microphone Studio**, **Photorealistic Innocent Narrator Avatars with Audio-Reactive Glow**, **Natural Girl & Male Neural Voices**, and **Direct Instagram Graph & YouTube Shorts Publishing**.
 
 ---
 
@@ -14,32 +14,52 @@ An autonomous AI agent and interactive Web Studio that generates daily high-rete
      - **Act III**: Climax / Shocking Twist (introduces Keyword 3)
    - Widescreen 2.39:1 anamorphic cinema aesthetic with real-time active keyword glow tracking, act title badges (`ACT I: THE ANOMALY`), and genre-tailored cinematic soundtracks (Thriller, Sci-Fi, Adventure, Romance, Noir).
 
-2. **📖 Multi-Genre Autonomous Storytelling**:
+2. **🔊 Dynamic Foley Sound Effects (SFX Engine)**:
+   - Procedural cinematic Foley stems dynamically synthesized and mixed at millisecond accuracy:
+     - `sfx_sub_bass.wav` (low-frequency sub-bass boom at video hook)
+     - `sfx_whoosh.wav` (high-velocity cinematic whoosh between Act I and Act II)
+     - `sfx_riser.wav` (tension-building riser leading into climax)
+     - `sfx_impact.wav` (heavy cinematic impact hit at Act III climax)
+
+3. **🌍 Multilingual Studio (6 Languages & Native Neural Voices)**:
+   - Full script generation, kinetic subtitle typography, and native voiceovers in:
+     - **English (US & UK)**: Ava, Emma, Brian, Christopher
+     - **Hindi (हिन्दी)**: Swara (`hi-IN-SwaraNeural`), Madhur (`hi-IN-MadhurNeural`)
+     - **Spanish (Español)**: Elvira (`es-ES-ElviraNeural`), Alvaro (`es-ES-AlvaroNeural`)
+     - **French (Français)**: Denise (`fr-FR-DeniseNeural`), Henri (`fr-FR-HenriNeural`)
+     - **German (Deutsch)**: Katja (`de-DE-KatjaNeural`), Conrad (`de-DE-ConradNeural`)
+     - **Japanese (日本語)**: Nanami (`ja-JP-NanamiNeural`), Keita (`ja-JP-KeitaNeural`)
+
+4. **🖼️ High-Retention 1080x1920 Cover Thumbnail Generator**:
+   - Automatically generates eye-catching Instagram Reel cover thumbnails (`cover_*.jpg`) for every video.
+   - Features category glow orbs, circular avatar frames with luminous aura rings, high-impact typography with drop shadows, and genre keyword pill badges.
+
+5. **🎙️ In-Browser Live Microphone Recording Studio**:
+   - Speak directly into your computer or mobile microphone via HTML5 MediaRecorder.
+   - Real-time Web Audio API waveform visualizer with dancing colored bars.
+   - One-click render of a custom 1080x1920 reel synchronized to your own spoken voice, or save recording as a reusable custom voice!
+
+6. **📖 Multi-Genre Autonomous Storytelling**:
    - **Motivation & Stoic**: Daily discipline, relentless focus, unshakeable resilience.
    - **Adventure & Quest**: Ancient expeditions, hidden chasms, mountain summits.
    - **Romantic & Poetic**: Twilight encounters, unspoken letters, emotional intimacy.
    - **Thriller & Suspense**: The 3 AM anomaly, forbidden vaults, neo-noir mysteries.
    - **Life Wisdom & Parables**: Stillness in chaos, the ripple effect, timeless perspective.
 
-3. **🎭 Innocent Avatars with Audio-Reactive Aura**:
+7. **🎭 Innocent Avatars with Audio-Reactive Aura**:
    - Photorealistic innocent avatars: **Ava** (Kind & Innocent Female), **Lucas** (Warm & Sincere Male), **Elena** (Poetic Storyteller), **Leo** (Adventurer).
    - Outer glowing energy ring expands and contracts in real-time according to vocal loudness.
    - 42-band symmetric FFT audio spectrum visualizer dancing to narrator speech.
 
-4. **✨ Creator Lab (Custom Characters & Voice Cloning)**:
+8. **✨ Creator Lab (Custom Characters & Voice Cloning)**:
    - **Upload Custom Character**: Drag & drop any portrait to register a new narrator.
    - **Voice Cloning / Upload**: Instant ElevenLabs voice cloning or local audio reference.
    - **Direct Spoken Narration**: Upload your own spoken audio recording and render a 1080x1920 reel with synchronized subtitles and waveforms!
 
-5. **🎙️ Natural Girl & Male Neural Voices**:
-   - Natural female voices: Ava (Gentle), Emma (Expressive), Jenny (Cheerful), Sonia (British Elegance).
-   - Natural male voices: Brian (Kind), Andrew (Youthful Explorer), Christopher (Deep Cinematic), Ryan (British Storyteller).
-   - ElevenLabs integration with automatic fallback to high-quality Microsoft Edge Neural TTS.
-
-6. **📱 Interactive Web Studio (`http://localhost:8000`)**:
+9. **📱 Interactive Web Studio & Direct Social Publishing**:
    - Switch between **Story & Motivation Reel** and **3-Keyword Short Movie** studio modes.
    - Live iPhone 9:16 simulator player with real-time playback.
-   - One-click publishing to Instagram via **Buffer API** or **Make.com / Zapier Webhooks**.
+   - One-click publishing to Instagram via **Meta Graph API v19.0**, **Buffer API**, **YouTube Shorts Manifest**, or **Make.com / Zapier Webhooks**.
 
 ---
 

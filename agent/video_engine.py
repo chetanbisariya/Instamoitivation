@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 import imageio_ffmpeg
 from agent.config import Config
 from agent.visualizer import AudioSpectrumVisualizer
+from agent.thumbnail_engine import ThumbnailEngine
 
 class VideoEngine:
     def __init__(self, width: int = 1080, height: int = 1920, fps: int = 30):
@@ -36,6 +37,31 @@ class VideoEngine:
             default_font = ImageFont.load_default()
             fonts = {k: default_font for k in ["badge", "quote_large", "quote_medium", "author", "handle", "small", "speaker_name"]}
         return fonts
+
+    def _get_font(self, font_key: str, text: str = ""):
+        if text and any(ord(c) > 127 for c in text):
+            u_paths = [
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/Library/Fonts/Arial Unicode.ttf",
+                "/System/Library/Fonts/Supplemental/DevanagariMT.ttc"
+            ]
+            sizes = {
+                "badge": 25,
+                "quote_large": 58,
+                "quote_medium": 48,
+                "author": 32,
+                "handle": 28,
+                "small": 22,
+                "speaker_name": 22
+            }
+            sz = sizes.get(font_key, 28)
+            for up in u_paths:
+                if os.path.exists(up):
+                    try:
+                        return ImageFont.truetype(up, sz)
+                    except Exception:
+                        pass
+        return self.fonts.get(font_key, self.fonts["badge"])
 
     def _preload_avatars(self) -> dict:
         """Preloads and circularly crops all avatar portraits including custom uploads."""
@@ -187,7 +213,7 @@ class VideoEngine:
             badge_text = f"•  {cat_tagline} : {topic.upper()}  •"
 
         # 2. Topic / Character Badge
-        badge_font = self.fonts["badge"]
+        badge_font = self._get_font("badge", badge_text)
         b_box = draw.textbbox((0, 0), badge_text, font=badge_font)
         bw, bh = b_box[2] - b_box[0], b_box[3] - b_box[1]
         badge_cx = self.width // 2
@@ -267,7 +293,7 @@ class VideoEngine:
         # 5. Author / Narrator Attribution
         attribution_str = author if author else character_name
         author_text = f"—  {attribution_str.upper()}  —"
-        author_font = self.fonts["author"]
+        author_font = self._get_font("author", author_text)
         a_box = draw.textbbox((0, 0), author_text, font=author_font)
         aw = a_box[2] - a_box[0]
         draw.text(((self.width - aw) // 2, 1400), author_text, font=author_font, fill=(156, 168, 188))
@@ -317,7 +343,7 @@ class VideoEngine:
         visualizer = AudioSpectrumVisualizer(audio_file, num_bars=42, fps=self.fps)
 
         words = script_data["script"].split()
-        quote_font = self.fonts["quote_large"] if len(words) <= 22 else self.fonts["quote_medium"]
+        quote_font = self._get_font("quote_large" if len(words) <= 22 else "quote_medium", script_data["script"])
         max_text_width = 860
         word_lines = self._wrap_text_to_lines(words, quote_font, max_text_width)
         
@@ -417,6 +443,19 @@ class VideoEngine:
 
         if proc.returncode != 0:
             raise RuntimeError(f"FFmpeg encoding failed: {stderr_output.decode('utf-8', errors='ignore')}")
+
+        # Generate Matching 1080x1920 Cover Thumbnail for Instagram Grid
+        cover_path = str(Path(output_mp4).parent / f"cover_{Path(output_mp4).stem}.jpg")
+        try:
+            ThumbnailEngine().generate_cover(
+                title=script_data.get("topic", "Daily Reel"),
+                category=cat,
+                hook=script_data.get("hook", script_data.get("script", "")[:60]),
+                avatar_key=avatar_key,
+                output_path=cover_path
+            )
+        except Exception as te:
+            print(f"[VideoEngine] Cover thumbnail generation notice: {te}")
 
         elapsed = time.time() - start_t
         fps_rendered = total_frames / max(elapsed, 0.001)
