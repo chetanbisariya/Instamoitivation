@@ -1,0 +1,33 @@
+# Environments & Secrets
+.venv/
+env/
+venv/
+.env
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large Video Output (MP4 & MP3 binaries)
+output/*.mp4
+output/*.mp3
+output/*.log
+output/voice_*.mp3
+output/reel_*.mp4
+!output/.gitkeep
+
+# IDE
+.idea/
+.vscode/

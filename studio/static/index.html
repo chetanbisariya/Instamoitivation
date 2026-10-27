@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Motivation Video Agent — Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-badge">
+                <span class="logo-icon">⚡</span>
+                <div class="logo-text">
+                    <span class="logo-title">INSTA MOTIVATION AGENT</span>
+                    <span class="logo-sub">Autonomous Daily Reel Creator & Scheduler</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator" id="agentStatusBadge">
+                <span class="status-pulse"></span>
+                <span id="agentStatusText">System Active</span>
+            </div>
+            <button class="btn-ghost" id="openSettingsBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Settings
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-container">
+        <!-- Left: Phone Simulator & Video Player -->
+        <section class="preview-section">
+            <div class="phone-frame-wrapper">
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="video-container">
+                        <video id="reelVideoPlayer" playsinline controls loop preload="metadata">
+                            <source src="/media/sample_reel.mp4" type="video/mp4" id="videoSource">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="video-placeholder" id="videoPlaceholder" style="display: none;">
+                            <div class="placeholder-icon">🎬</div>
+                            <p>No reel selected. Click "Generate Reel" to create one.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-meta-card">
+                <div class="meta-row">
+                    <span class="meta-label">Selected File:</span>
+                    <span class="meta-value" id="currentFileName">sample_reel.mp4</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Voiceover:</span>
+                    <span class="meta-value" id="currentVoiceProvider">Edge-TTS (Christopher Neural)</span>
+                </div>
+                <div class="meta-actions">
+                    <a id="downloadReelBtn" href="/media/sample_reel.mp4" download class="btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download MP4
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Studio Controls & Publishing -->
+        <section class="controls-section">
+            <!-- Studio Card: Generator -->
+            <div class="card generator-card">
+                <div class="card-header">
+                    <h2>Create New Reel</h2>
+                    <span class="badge-accent">9:16 Minimalist Typographic</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Theme / Topic Presets</label>
+                    <div class="topic-chips" id="topicChipsContainer">
+                        <button class="chip active" data-topic="DAILY DISCIPLINE">Daily Discipline</button>
+                        <button class="chip" data-topic="RELENTLESS FOCUS">Relentless Focus</button>
+                        <button class="chip" data-topic="THE POWER OF SILENCE">Power of Silence</button>
+                        <button class="chip" data-topic="UNSHAKABLE MIND">Unshakable Mind</button>
+                        <button class="chip" data-topic="EMBRACE THE HARD PATH">The Hard Path</button>
+                        <button class="chip" data-topic="RADICAL ACCOUNTABILITY">Accountability</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customPromptInput" class="form-label">Custom Topic or Quote (Optional)</label>
+                    <textarea id="customPromptInput" rows="2" class="form-input" placeholder="e.g. 'Marcus Aurelius on morning discipline and overcoming weakness' or leave empty for daily rotation"></textarea>
+                </div>
+
+                <div class="generator-action-bar">
+                    <button class="btn-primary" id="generateReelBtn">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">Generate Reel Now</span>
+                    </button>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="progress-box" id="generationProgressBox" style="display: none;">
+                    <div class="progress-header">
+                        <span class="progress-title" id="progressStepTitle">Rendering in progress...</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBarFill"></div>
+                    </div>
+                    <p class="progress-desc" id="progressStepDesc">Synthesizing voiceover, computing waveform FFT, and encoding 1080x1920 MP4...</p>
+                </div>
+            </div>
+
+            <!-- Studio Card: Instagram Caption & Publishing -->
+            <div class="card publishing-card">
+                <div class="card-header">
+                    <h2>Instagram Publishing & Caption</h2>
+                    <span class="status-pill" id="currentPublishStatus">SAVED_LOCALLY</span>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-with-action">
+                        <label for="captionTextArea" class="form-label">Post Caption & Hashtags</label>
+                        <button class="btn-link" id="copyCaptionBtn">📋 Copy Caption</button>
+                    </div>
+                    <textarea id="captionTextArea" rows="6" class="form-input" placeholder="Caption will appear here after generation..."></textarea>
+                </div>
+
+                <div class="social-dispatch-actions">
+                    <button class="btn-accent" id="dispatchBufferBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        Queue to Buffer / Instagram
+                    </button>
+                    <button class="btn-secondary" id="dispatchWebhookBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        Trigger Webhook (Make/Zapier)
+                    </button>
+                </div>
+                <div id="dispatchFeedback" class="dispatch-msg"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom: Library of Generated Reels -->
+    <section class="library-section">
+        <div class="library-header">
+            <h2>Generated Reels Library</h2>
+            <button class="btn-ghost" id="refreshLibraryBtn">🔄 Refresh</button>
+        </div>
+        <div class="reels-grid" id="reelsGrid">
+            <!-- Populated via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settingsModal" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Agent Settings & API Keys</h3>
+                <button class="modal-close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="cfgInstaHandle">Instagram Handle</label>
+                    <input type="text" id="cfgInstaHandle" class="form-input" placeholder="@your.stoic.brand">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgElevenKey">ElevenLabs API Key</label>
+                    <input type="password" id="cfgElevenKey" class="form-input" placeholder="elevenlabs_api_key...">
+                    <small class="form-help">Leave empty to use high quality free Microsoft Edge-TTS voice.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgVoiceId">ElevenLabs Voice ID</label>
+                    <input type="text" id="cfgVoiceId" class="form-input" placeholder="pNInz6obpgDQGcFmaJgB (Adam)">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgGeminiKey">Google Gemini API Key (Optional)</label>
+                    <input type="password" id="cfgGeminiKey" class="form-input" placeholder="AIzaSy...">
+                    <small class="form-help">If empty, curated masterclass rotation database is used.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgBufferToken">Buffer Access Token</label>
+                    <input type="password" id="cfgBufferToken" class="form-input" placeholder="Buffer token">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgBufferProfileId">Buffer Instagram Profile ID</label>
+                    <input type="text" id="cfgBufferProfileId" class="form-input" placeholder="63abc...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgWebhookUrl">Webhook URL (Make.com / Zapier)</label>
+                    <input type="url" id="cfgWebhookUrl" class="form-input" placeholder="https://hook.eu1.make.com/...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cfgScheduleTime">Daily Schedule Run Time (24h format)</label>
+                    <input type="time" id="cfgScheduleTime" class="form-input" value="09:00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn-primary" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
