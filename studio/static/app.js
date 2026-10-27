@@ -21,6 +21,42 @@ document.addEventListener("DOMContentLoaded", () => {
         "WISDOM": ["THE ART OF LETTING GO", "THE RIPPLE EFFECT", "STILLNESS IN CHAOS", "TIMELESS PERSPECTIVE", "THE QUIET MIND"]
     };
 
+    // Cinema Keyword Presets
+    const KEYWORD_TRIOS = [
+        { k1: "Midnight", k2: "Lighthouse", k3: "Key", genre: "THRILLER" },
+        { k1: "Eclipse", k2: "Observatory", k3: "Signal", genre: "SCI-FI" },
+        { k1: "Blizzard", k2: "Altar", k3: "Sanctuary", genre: "ADVENTURE" },
+        { k1: "Rain", k2: "Cobblestone", k3: "Farewell", genre: "ROMANTIC" },
+        { k1: "Fog", k2: "Warehouse", k3: "Revolver", genre: "NOIR" },
+        { k1: "Clocktower", k2: "Attic", k3: "Reflection", genre: "THRILLER" },
+        { k1: "Shipwreck", k2: "Jungle", k3: "Amulet", genre: "ADVENTURE" },
+        { k1: "Quantum", k2: "Drone", k3: "Paradox", genre: "SCI-FI" },
+        { k1: "Neon", k2: "Alley", k3: "Cipher", genre: "NOIR" },
+        { k1: "Letter", k2: "Lavender", k3: "Vow", genre: "ROMANTIC" }
+    ];
+
+    let selectedCinemaGenre = "THRILLER";
+
+    // Mode Switcher Elements
+    const modeStoryReelTab = document.getElementById("modeStoryReelTab");
+    const modeCinemaTab = document.getElementById("modeCinemaTab");
+    const storyDirectorPanel = document.getElementById("storyDirectorPanel");
+    const cinemaDirectorPanel = document.getElementById("cinemaDirectorPanel");
+
+    // Cinema Elements
+    const kw1Input = document.getElementById("kw1Input");
+    const kw2Input = document.getElementById("kw2Input");
+    const kw3Input = document.getElementById("kw3Input");
+    const randomizeKeywordsBtn = document.getElementById("randomizeKeywordsBtn");
+    const cinemaGenreTabs = document.querySelectorAll("#cinemaGenreTabs .cinema-tab");
+    const cinemaGenreBadge = document.getElementById("cinemaGenreBadge");
+    const cinemaAvatarSelect = document.getElementById("cinemaAvatarSelect");
+    const cinemaVoiceSelect = document.getElementById("cinemaVoiceSelect");
+    const generateMovieBtn = document.getElementById("generateMovieBtn");
+    const movieProgressBox = document.getElementById("movieProgressBox");
+    const movieProgressTitle = document.getElementById("movieProgressTitle");
+    const movieProgressDesc = document.getElementById("movieProgressDesc");
+
     // Elements
     const reelVideoPlayer = document.getElementById("reelVideoPlayer");
     const videoSource = document.getElementById("videoSource");
@@ -107,9 +143,80 @@ document.addEventListener("DOMContentLoaded", () => {
             optionsData = await res.json();
             renderAvatarsPicker(optionsData.avatars);
             renderVoiceDropdown(optionsData.voices);
+            renderCinemaCastOptions(optionsData.avatars, optionsData.voices);
         } catch (err) {
             console.error("Options fetch error:", err);
         }
+    }
+
+    function renderCinemaCastOptions(avatars, voices) {
+        cinemaAvatarSelect.innerHTML = "";
+        cinemaVoiceSelect.innerHTML = "";
+
+        Object.entries(avatars).forEach(([avKey, avInfo]) => {
+            const opt = document.createElement("option");
+            opt.value = avKey;
+            opt.textContent = `${avInfo.name} (${avInfo.description ? avInfo.description.split(' ')[0] : 'Narrator'})`;
+            if (avKey === "female_innocent") opt.selected = true;
+            cinemaAvatarSelect.appendChild(opt);
+        });
+
+        const noneOpt = document.createElement("option");
+        noneOpt.value = "none";
+        noneOpt.textContent = "None (Minimal / Waveform Only)";
+        cinemaAvatarSelect.appendChild(noneOpt);
+
+        Object.entries(voices).forEach(([vKey, vInfo]) => {
+            const opt = document.createElement("option");
+            opt.value = vKey;
+            opt.textContent = `${vInfo.name} (${vInfo.gender})`;
+            if (vKey === "ava_female") opt.selected = true;
+            cinemaVoiceSelect.appendChild(opt);
+        });
+    }
+
+    // Studio Mode Switcher
+    modeStoryReelTab.addEventListener("click", () => {
+        modeStoryReelTab.classList.add("active");
+        modeCinemaTab.classList.remove("active");
+        storyDirectorPanel.style.display = "block";
+        cinemaDirectorPanel.style.display = "none";
+    });
+
+    modeCinemaTab.addEventListener("click", () => {
+        modeCinemaTab.classList.add("active");
+        modeStoryReelTab.classList.remove("active");
+        cinemaDirectorPanel.style.display = "block";
+        storyDirectorPanel.style.display = "none";
+    });
+
+    // Randomize Keywords
+    randomizeKeywordsBtn.addEventListener("click", () => {
+        const randomTrio = KEYWORD_TRIOS[Math.floor(Math.random() * KEYWORD_TRIOS.length)];
+        kw1Input.value = randomTrio.k1;
+        kw2Input.value = randomTrio.k2;
+        kw3Input.value = randomTrio.k3;
+        setCinemaGenre(randomTrio.genre);
+    });
+
+    // Cinema Genre Selector
+    cinemaGenreTabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            setCinemaGenre(tab.getAttribute("data-genre"));
+        });
+    });
+
+    function setCinemaGenre(genre) {
+        selectedCinemaGenre = genre;
+        cinemaGenreTabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-genre") === genre));
+        const labels = {
+            "THRILLER": "SUSPENSE THRILLER",
+            "SCI-FI": "SCI-FI CINEMA",
+            "ADVENTURE": "EPIC ADVENTURE",
+            "ROMANTIC": "ROMANTIC CINEMA",
+            "NOIR": "NEO-NOIR MYSTERY"
+        };
+        cinemaGenreBadge.textContent = labels[genre] || genre;
     }
 
     function renderAvatarsPicker(avatars) {
@@ -538,6 +645,69 @@ document.addEventListener("DOMContentLoaded", () => {
             generationProgressBox.style.display = "none";
         } finally {
             generateReelBtn.disabled = false;
+        }
+    });
+
+    // 5B. Generate 3-Keyword Short Movie Action
+    generateMovieBtn.addEventListener("click", async () => {
+        const k1 = kw1Input.value.trim() || "Midnight";
+        const k2 = kw2Input.value.trim() || "Lighthouse";
+        const k3 = kw3Input.value.trim() || "Key";
+
+        generateMovieBtn.disabled = true;
+        movieProgressBox.style.display = "block";
+        movieProgressTitle.textContent = `Directing 3-Act ${selectedCinemaGenre} Short Film...`;
+        movieProgressDesc.textContent = `Keywords: [${k1}, ${k2}, ${k3}] • Writing screenplay, synthesizing voice, and rendering 3-act widescreen film...`;
+
+        try {
+            const payload = {
+                keyword1: k1,
+                keyword2: k2,
+                keyword3: k3,
+                genre: selectedCinemaGenre,
+                voice: cinemaVoiceSelect.value,
+                avatar: cinemaAvatarSelect.value
+            };
+
+            const res = await fetch("/api/movie/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.detail || "Movie generation failed");
+            }
+
+            movieProgressTitle.textContent = "🎬 Short Movie Rendered Successfully!";
+            movieProgressDesc.textContent = `"${data.movie.title}" is ready! Act I, II, & III synchronized with keyword illumination.`;
+
+            await loadReels();
+            if (data.movie) {
+                selectReel({
+                    filename: data.movie.filename,
+                    url: data.movie.url,
+                    category: `MOVIE (${data.movie.genre})`,
+                    topic: data.movie.title,
+                    script: data.movie.script,
+                    caption: data.movie.caption,
+                    duration: data.movie.duration,
+                    voice_name: data.movie.voice_name,
+                    status: data.movie.status
+                });
+                reelVideoPlayer.play().catch(() => {});
+            }
+
+            setTimeout(() => {
+                movieProgressBox.style.display = "none";
+            }, 3500);
+
+        } catch (err) {
+            alert(`Movie Generation Error: ${err.message}`);
+            movieProgressBox.style.display = "none";
+        } finally {
+            generateMovieBtn.disabled = false;
         }
     });
 

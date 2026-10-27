@@ -10,12 +10,19 @@ from agent.config import Config
 from agent.generator import get_daily_script
 from agent.voice import VoiceSynthesizer
 from agent.video_engine import VideoEngine
+from agent.movie_engine import MovieEngine
+from agent.movie_generator import generate_short_movie_script
 from agent.publisher import SocialPublisher
 
 class DailyReelAgent:
     def __init__(self):
         Config.ensure_dirs()
         self.video_engine = VideoEngine(
+            width=Config.VIDEO_WIDTH,
+            height=Config.VIDEO_HEIGHT,
+            fps=Config.VIDEO_FPS
+        )
+        self.movie_engine = MovieEngine(
             width=Config.VIDEO_WIDTH,
             height=Config.VIDEO_HEIGHT,
             fps=Config.VIDEO_FPS
@@ -103,6 +110,90 @@ class DailyReelAgent:
         print(f"Output file: {video_path}\n")
         return result
 
+    def create_short_movie(
+        self,
+        keyword1: str,
+        keyword2: str,
+        keyword3: str,
+        genre: str = "THRILLER",
+        voice_key: str = "",
+        avatar_key: str = ""
+    ) -> dict:
+        """
+        Generates a 3-act cinematic short movie from 3 user keywords:
+        - Act I: Inciting Incident (Keyword 1)
+        - Act II: Rising Conflict (Keyword 2)
+        - Act III: Climax / Twist (Keyword 3)
+        Renders with 2.39:1 widescreen aesthetic, active keyword glow tracking, and cinema soundtrack.
+        """
+        k1 = keyword1.strip() or "Midnight"
+        k2 = keyword2.strip() or "Lighthouse"
+        k3 = keyword3.strip() or "Key"
+        g = genre.upper() if genre.upper() in ["THRILLER", "SCI-FI", "ADVENTURE", "ROMANTIC", "NOIR"] else "THRILLER"
+        selected_voice = voice_key or Config.DEFAULT_VOICE or "ava_female"
+        selected_avatar = avatar_key or Config.DEFAULT_AVATAR or "female_innocent"
+        if selected_avatar.lower() == "none":
+            selected_avatar = ""
+
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        print(f"\n[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] --- Starting 3-Keyword Short Movie Pipeline ---")
+        print(f"  Keywords: [{k1}, {k2}, {k3}]")
+        print(f"  Genre: {g}")
+        print(f"  Voice: {selected_voice} | Avatar: {selected_avatar or 'Hidden'}")
+
+        # 1. Generate 3-Act Script
+        print("[1/4] Generating 3-act cinematic script and act breakdown...")
+        movie_data = generate_short_movie_script(keyword1=k1, keyword2=k2, keyword3=k3, genre=g)
+        print(f"      Film Title: \"{movie_data.get('title')}\"")
+        print(f"      Logline: {movie_data.get('logline')}")
+        print(f"      Act Breakdown: {movie_data.get('scene_titles')}")
+
+        # 2. Voiceover Synthesis
+        print("[2/4] Synthesizing cinematic voice narration...")
+        voice_filename = f"movie_voice_{g.lower()}_{timestamp_str}.mp3"
+        voice_path = str(Config.OUTPUT_DIR / voice_filename)
+        voice_data = VoiceSynthesizer.generate_voiceover(movie_data["full_script"], voice_path, voice_key=selected_voice)
+        print(f"      Voice: {voice_data['voice_name']} | Duration: {voice_data['duration']:.2f}s")
+
+        # 3. Cinema Video Rendering
+        print("[3/4] Rendering 3-Act Cinematic Short Film with Keyword Tracking...")
+        video_filename = f"movie_{g.lower()}_{timestamp_str}.mp4"
+        video_path = str(Config.OUTPUT_DIR / video_filename)
+        self.movie_engine.render_movie(
+            movie_data=movie_data,
+            voice_data=voice_data,
+            output_mp4=video_path,
+            avatar_key=selected_avatar,
+            genre=g
+        )
+
+        # 4. Social Dispatch / Queueing
+        print("[4/4] Queueing short movie premiere...")
+        movie_meta = {
+            "category": f"MOVIE_{g}",
+            "topic": f"SHORT FILM: {movie_data.get('title')}",
+            "author": "AI Cinema Studio",
+            "script": movie_data["full_script"],
+            "caption": movie_data["caption"]
+        }
+        publish_result = SocialPublisher.queue_post(video_path, movie_meta, voice_data)
+
+        result = {
+            "success": True,
+            "timestamp": timestamp_str,
+            "video_path": video_path,
+            "video_filename": video_filename,
+            "genre": g,
+            "keywords": [k1, k2, k3],
+            "movie_data": movie_data,
+            "voice_data": voice_data,
+            "avatar_key": selected_avatar,
+            "publish_result": publish_result
+        }
+        print(f"--- 3-Keyword Short Movie Complete! ---")
+        print(f"Movie File: {video_path}\n")
+        return result
+
     def start_scheduler(self, run_time: str = None, category: str = None):
         """Runs the agent as a persistent daily scheduler with automatic category rotation."""
         target_time = run_time or Config.SCHEDULE_TIME or "09:00"
@@ -149,11 +240,28 @@ def main():
     parser.add_argument("--topic", type=str, default="", help="Custom topic override")
     parser.add_argument("--prompt", type=str, default="", help="Custom prompt or story text")
     parser.add_argument("--schedule", type=str, nargs="?", const="", help="Run daily scheduler at specified time (default: 09:00)")
+    
+    # 3-Keyword Short Movie flags
+    parser.add_argument("--movie", action="store_true", help="Generate a 3-keyword cinematic short movie")
+    parser.add_argument("--k1", type=str, default="Midnight", help="Keyword 1 (Inciting Incident)")
+    parser.add_argument("--k2", type=str, default="Lighthouse", help="Keyword 2 (Rising Conflict)")
+    parser.add_argument("--k3", type=str, default="Key", help="Keyword 3 (Climax / Twist)")
+    parser.add_argument("--genre", type=str, default="THRILLER", help="Short movie genre: THRILLER, SCI-FI, ADVENTURE, ROMANTIC, NOIR")
+    
     args = parser.parse_args()
 
     agent = DailyReelAgent()
 
-    if args.schedule is not None:
+    if args.movie:
+        agent.create_short_movie(
+            keyword1=args.k1,
+            keyword2=args.k2,
+            keyword3=args.k3,
+            genre=args.genre,
+            voice_key=args.voice,
+            avatar_key=args.avatar
+        )
+    elif args.schedule is not None:
         sched_time = args.schedule if args.schedule else Config.SCHEDULE_TIME
         agent.start_scheduler(run_time=sched_time, category=args.category)
     else:

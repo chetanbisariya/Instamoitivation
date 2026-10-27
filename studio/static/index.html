@@ -77,7 +77,18 @@
 
         <!-- Right: Studio Controls -->
         <section class="controls-section">
-            <div class="card generator-card">
+            <!-- Studio Mode Switcher -->
+            <div class="studio-mode-switcher">
+                <button class="mode-tab active" id="modeStoryReelTab" data-mode="story">
+                    <span class="mode-icon">📖</span> Story & Motivation Reel
+                </button>
+                <button class="mode-tab" id="modeCinemaTab" data-mode="cinema">
+                    <span class="mode-icon">🎬</span> 3-Keyword Short Movie <span class="mode-badge-new">NEW</span>
+                </button>
+            </div>
+
+            <!-- Panel 1: Story Director -->
+            <div class="card generator-card" id="storyDirectorPanel">
                 <div class="card-header">
                     <h2>Studio Director</h2>
                     <span class="badge-accent" id="categoryTaglineBadge">ROMANTIC & POETIC</span>
@@ -141,6 +152,92 @@
                         <div class="progress-bar-fill" id="progressBarFill"></div>
                     </div>
                     <p class="progress-desc" id="progressStepDesc">Synthesizing chosen voice, applying avatar audio-reactive aura, and rendering 1080x1920 MP4...</p>
+                </div>
+            </div>
+
+            <!-- Panel 2: 3-Keyword Cinema Micro-Studio -->
+            <div class="card generator-card cinema-card" id="cinemaDirectorPanel" style="display: none;">
+                <div class="card-header">
+                    <div>
+                        <h2>🎬 3-Keyword Cinema Micro-Studio</h2>
+                        <p class="card-subtitle">Generate a 3-act cinematic short film from just three words</p>
+                    </div>
+                    <span class="badge-cinema" id="cinemaGenreBadge">SUSPENSE THRILLER</span>
+                </div>
+
+                <!-- 1. The 3 Keywords Grid -->
+                <div class="form-group">
+                    <div class="label-with-action">
+                        <label class="form-label">1. Enter Your 3 Core Keywords</label>
+                        <button class="btn-link" id="randomizeKeywordsBtn">🎲 Randomize Trio</button>
+                    </div>
+                    <div class="keywords-inputs-grid">
+                        <div class="kw-box">
+                            <span class="kw-badge act-1">ACT I • INCITING INCIDENT</span>
+                            <div class="kw-input-wrap">
+                                <span class="kw-icon">🔑</span>
+                                <input type="text" id="kw1Input" class="kw-input" value="Midnight" placeholder="e.g. Midnight" required>
+                            </div>
+                        </div>
+                        <div class="kw-box">
+                            <span class="kw-badge act-2">ACT II • RISING CONFLICT</span>
+                            <div class="kw-input-wrap">
+                                <span class="kw-icon">⚡</span>
+                                <input type="text" id="kw2Input" class="kw-input" value="Lighthouse" placeholder="e.g. Lighthouse" required>
+                            </div>
+                        </div>
+                        <div class="kw-box">
+                            <span class="kw-badge act-3">ACT III • CLIMAX / TWIST</span>
+                            <div class="kw-input-wrap">
+                                <span class="kw-icon">🎯</span>
+                                <input type="text" id="kw3Input" class="kw-input" value="Key" placeholder="e.g. Key" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Cinema Genre Tabs -->
+                <div class="form-group">
+                    <label class="form-label">2. Select Cinema Genre</label>
+                    <div class="cinema-genre-tabs" id="cinemaGenreTabs">
+                        <button class="cinema-tab active" data-genre="THRILLER">⚡ Thriller</button>
+                        <button class="cinema-tab" data-genre="SCI-FI">🛸 Sci-Fi</button>
+                        <button class="cinema-tab" data-genre="ADVENTURE">🧭 Adventure</button>
+                        <button class="cinema-tab" data-genre="ROMANTIC">✨ Romance</button>
+                        <button class="cinema-tab" data-genre="NOIR">🕵️ Neo-Noir</button>
+                    </div>
+                </div>
+
+                <!-- 3. Cinema Narrator & Voice -->
+                <div class="cinema-cast-grid">
+                    <div class="form-group">
+                        <label class="form-label">3. Narrator Character</label>
+                        <select id="cinemaAvatarSelect" class="form-input"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">4. Narration Voice</label>
+                        <select id="cinemaVoiceSelect" class="form-input"></select>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="generator-action-bar">
+                    <button class="btn-cinema" id="generateMovieBtn">
+                        <span class="btn-icon">🎬</span>
+                        <span class="btn-text">Render 3-Keyword Short Movie</span>
+                    </button>
+                </div>
+
+                <!-- Cinema Progress Tracker -->
+                <div class="progress-box cinema-progress" id="movieProgressBox" style="display: none;">
+                    <div class="progress-header">
+                        <span class="progress-title" id="movieProgressTitle">Directing 3-Act Short Movie...</span>
+                        <span class="spinner spinner-cinema"></span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill progress-bar-cinema" id="movieProgressBarFill"></div>
+                    </div>
+                    <p class="progress-desc" id="movieProgressDesc">Synthesizing narrative arc across 3 acts with dynamic keyword illumination...</p>
                 </div>
             </div>
 

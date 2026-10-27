@@ -1,43 +1,45 @@
-# ⚡ Instagram Motivation Video Agent
+# ⚡ Instagram Multi-Story, Motivation & 3-Keyword Cinema Agent
 
-An autonomous AI agent that generates daily high-retention 9:16 vertical motivational reels (1080x1920) with **minimalist kinetic typography**, **real-time audio spectrum visualizers**, **cinematic ambient soundtrack**, and **automated posting/queueing to Instagram** via Buffer & Webhooks.
+An autonomous AI agent and interactive Web Studio that generates daily high-retention 9:16 vertical reels (1080x1920) across **Multi-Genre Storytelling** (Motivation, Adventure, Romantic, Thriller, Wisdom), **3-Keyword Cinematic Micro-Movies**, **Photorealistic Innocent Narrator Avatars with Audio-Reactive Glow**, **Natural Girl & Male Neural Voices**, and **Custom Character / Voice Cloning Uploads (Creator Lab)**.
 
 ---
 
 ## 🌟 Key Features
 
-1. **Minimalist Kinetic Typography Engine**:
-   - High-impact editorial design (1080x1920 9:16 vertical video).
-   - Real-time word-by-word active glow highlight (words illuminate in golden amber as they are spoken).
-   - Category pill badges, author attribution, and custom brand handle (`@yourhandle`).
-   - Sleek bottom progress bar.
+1. **🎬 3-Keyword Cinematic Micro-Studio**:
+   - Provide any 3 keywords (e.g. `Midnight`, `Lighthouse`, `Key` or randomized with one click).
+   - Automatically scripts a complete **3-act cinematic short film**:
+     - **Act I**: Inciting Incident (introduces Keyword 1)
+     - **Act II**: Rising Conflict / Suspense (introduces Keyword 2)
+     - **Act III**: Climax / Shocking Twist (introduces Keyword 3)
+   - Widescreen 2.39:1 anamorphic cinema aesthetic with real-time active keyword glow tracking, act title badges (`ACT I: THE ANOMALY`), and genre-tailored cinematic soundtracks (Thriller, Sci-Fi, Adventure, Romance, Noir).
 
-2. **Dynamic Audio Waveform Visualizer**:
-   - 42-band symmetric audio spectrum analyzer that dances dynamically to the narrator's vocal cadence with smooth attack/decay physics.
+2. **📖 Multi-Genre Autonomous Storytelling**:
+   - **Motivation & Stoic**: Daily discipline, relentless focus, unshakeable resilience.
+   - **Adventure & Quest**: Ancient expeditions, hidden chasms, mountain summits.
+   - **Romantic & Poetic**: Twilight encounters, unspoken letters, emotional intimacy.
+   - **Thriller & Suspense**: The 3 AM anomaly, forbidden vaults, neo-noir mysteries.
+   - **Life Wisdom & Parables**: Stillness in chaos, the ripple effect, timeless perspective.
 
-3. **Ultra-Realistic Voiceover (ElevenLabs & Edge-TTS Fallback)**:
-   - Built-in integration for **ElevenLabs API** (deep, authoritative voices like Adam or Antoni).
-   - Zero-dependency fallback to **Microsoft Edge Neural Voice** (`en-US-ChristopherNeural` - 100% free, high quality, no API key needed).
+3. **🎭 Innocent Avatars with Audio-Reactive Aura**:
+   - Photorealistic innocent avatars: **Ava** (Kind & Innocent Female), **Lucas** (Warm & Sincere Male), **Elena** (Poetic Storyteller), **Leo** (Adventurer).
+   - Outer glowing energy ring expands and contracts in real-time according to vocal loudness.
+   - 42-band symmetric FFT audio spectrum visualizer dancing to narrator speech.
 
-4. **Cinematic Ambient Drone**:
-   - Procedurally generated deep cinematic drone and bass pad that sits underneath the narration at -18 dB to build anticipation and focus.
+4. **✨ Creator Lab (Custom Characters & Voice Cloning)**:
+   - **Upload Custom Character**: Drag & drop any portrait to register a new narrator.
+   - **Voice Cloning / Upload**: Instant ElevenLabs voice cloning or local audio reference.
+   - **Direct Spoken Narration**: Upload your own spoken audio recording and render a 1080x1920 reel with synchronized subtitles and waveforms!
 
-5. **Viral Content & Caption Generator**:
-   - Rotates through a curated collection of 50+ masterclass scripts (Stoicism, Relentless Focus, Silence, Habit Discipline, Resilience).
-   - Generates complete Instagram captions with call-to-action questions and 15+ trending hashtags.
-   - Optional **Google Gemini API** integration for custom AI script creation.
+5. **🎙️ Natural Girl & Male Neural Voices**:
+   - Natural female voices: Ava (Gentle), Emma (Expressive), Jenny (Cheerful), Sonia (British Elegance).
+   - Natural male voices: Brian (Kind), Andrew (Youthful Explorer), Christopher (Deep Cinematic), Ryan (British Storyteller).
+   - ElevenLabs integration with automatic fallback to high-quality Microsoft Edge Neural TTS.
 
-6. **Social Scheduler Integration**:
-   - **Buffer API**: Directly schedules posts into your Buffer Instagram queue.
-   - **Webhooks**: Dispatches JSON payloads to Make.com, Zapier, or n8n to upload and publish reels to Instagram automatically.
-
-7. **Interactive Web Studio**:
-   - Sleek dark-mode Studio dashboard on `http://localhost:8000`.
-   - iPhone simulator video player to preview 9:16 reels in real time.
-   - One-click reel generation, caption copying, and settings management.
-
-8. **24/7 Cloud Automation via GitHub Actions**:
-   - Pre-configured `.github/workflows/daily_reel.yml` to trigger the pipeline every day at 9:00 AM UTC without needing your computer turned on!
+6. **📱 Interactive Web Studio (`http://localhost:8000`)**:
+   - Switch between **Story & Motivation Reel** and **3-Keyword Short Movie** studio modes.
+   - Live iPhone 9:16 simulator player with real-time playback.
+   - One-click publishing to Instagram via **Buffer API** or **Make.com / Zapier Webhooks**.
 
 ---
 
@@ -72,7 +74,26 @@ Generate with a custom quote/prompt:
 
 ---
 
-### 3. Run the Daily Scheduler Daemon
+### 3. Generate a 3-Keyword Short Movie from CLI
+
+Generate an epic 3-act cinematic film from 3 keywords:
+```bash
+.venv/bin/python -m agent.runner --movie --k1 "Midnight" --k2 "Lighthouse" --k3 "Key" --genre THRILLER
+```
+
+Sci-Fi time travel film:
+```bash
+.venv/bin/python -m agent.runner --movie --k1 "Eclipse" --k2 "Observatory" --k3 "Signal" --genre SCI-FI
+```
+
+Adventure or Romantic film:
+```bash
+.venv/bin/python -m agent.runner --movie --k1 "Shipwreck" --k2 "Jungle" --k3 "Amulet" --genre ADVENTURE --avatar male_adventurer
+```
+
+---
+
+### 4. Run the Daily Scheduler Daemon
 
 Keep the agent running in the background to post automatically every day at 09:00 AM:
 ```bash

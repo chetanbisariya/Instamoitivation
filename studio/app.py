@@ -35,6 +35,14 @@ class GenerateRequest(BaseModel):
     topic: str = ""
     prompt: str = ""
 
+class MovieGenerateRequest(BaseModel):
+    keyword1: str = "Midnight"
+    keyword2: str = "Lighthouse"
+    keyword3: str = "Key"
+    genre: str = "THRILLER"
+    voice: str = ""
+    avatar: str = ""
+
 class ConfigUpdateRequest(BaseModel):
     instagram_handle: str = ""
     default_category: str = ""
@@ -368,6 +376,38 @@ def generate_reel(req: GenerateRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/movie/generate")
+def generate_short_movie(req: MovieGenerateRequest):
+    """Generates a 3-act cinematic short movie from 3 user keywords."""
+    try:
+        result = agent.create_short_movie(
+            keyword1=req.keyword1,
+            keyword2=req.keyword2,
+            keyword3=req.keyword3,
+            genre=req.genre,
+            voice_key=req.voice,
+            avatar_key=req.avatar
+        )
+        return {
+            "success": True,
+            "movie": {
+                "filename": result["video_filename"],
+                "url": f"/media/{result['video_filename']}",
+                "genre": result["genre"],
+                "keywords": result["keywords"],
+                "title": result["movie_data"].get("title"),
+                "logline": result["movie_data"].get("logline"),
+                "act_titles": result["movie_data"].get("scene_titles"),
+                "caption": result["movie_data"].get("caption"),
+                "script": result["movie_data"].get("full_script"),
+                "duration": result["voice_data"].get("duration"),
+                "voice_name": result["voice_data"].get("voice_name"),
+                "status": result["publish_result"].get("status")
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"3-Keyword Short Movie generation failed: {str(e)}")
 
 @app.post("/api/publish/{filename}")
 def publish_reel(filename: str):
