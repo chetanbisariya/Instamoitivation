@@ -1303,4 +1303,656 @@ button, a.btn-primary, a.btn-secondary {
     box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
 
+/* ========================================================
+   RETRO FLASH GAMES ARCADE STYLES
+   ======================================================== */
+
+.arcade-card {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08) 0%, rgba(15, 18, 25, 0.95) 60%);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(16, 185, 129, 0.15);
+}
+
+.arcade-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.arcade-header-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.badge-arcade {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #051410;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+}
+
+.btn-theater-toggle {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-theater-toggle:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--border-hover);
+}
+
+/* Theater Mode Active Layout */
+.main-container.arcade-theater-active {
+    grid-template-columns: 1fr;
+    max-width: 1100px;
+}
+
+.main-container.arcade-theater-active .preview-section {
+    display: none;
+}
+
+/* Arcade Category Tabs */
+.arcade-category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: rgba(10, 14, 20, 0.7);
+    padding: 0.35rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.arcade-cat-tab {
+    flex: 1;
+    min-width: 120px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.arcade-cat-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.arcade-cat-tab.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+/* Arcade Cabinet Styling */
+.arcade-cabinet-wrapper {
+    margin-top: 1rem;
+    background: linear-gradient(180deg, #18202c, #0e1219);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.arcade-cabinet {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Cabinet Marquee */
+.cabinet-marquee {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #080b10;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+}
+
+.marquee-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.marquee-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+    animation: pulse 1.5s infinite;
+}
+
+.marquee-title {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: #fff;
+}
+
+.marquee-badge {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+}
+
+.marquee-stats {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.stat-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+
+.stat-pill .stat-lbl {
+    color: var(--text-muted);
+}
+
+.stat-pill .stat-val {
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.stat-pill.highlight {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.stat-pill.highlight .stat-val {
+    color: #34d399;
+}
+
+.marquee-tools {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.btn-marquee-tool {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-marquee-tool:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Screen Frame */
+.arcade-screen-frame {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    max-height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.7);
+    border: 3px solid #1a2230;
+}
+
+#arcadeGameCanvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #06080c;
+    display: block;
+}
+
+/* CRT Scanlines Filter Overlay */
+.crt-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.crt-scanlines.active {
+    opacity: 1;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.28) 50%
+    ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.04),
+        rgba(0, 255, 0, 0.02),
+        rgba(0, 0, 255, 0.04)
+    );
+    background-size: 100% 3px, 6px 100%;
+}
+
+/* Overlay Dialog */
+.arcade-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 9, 14, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 20;
+    transition: opacity 0.25s ease;
+}
+
+.overlay-modal {
+    background: rgba(18, 24, 34, 0.95);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(16, 185, 129, 0.2);
+}
+
+.overlay-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.5));
+}
+
+.overlay-title {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.04em;
+}
+
+.overlay-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 1.25rem;
+}
+
+.overlay-score-box {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-subtle);
+    padding: 0.85rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.25rem;
+}
+
+.overlay-score-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.overlay-score-item .lbl {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.overlay-score-item .val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: monospace;
+    color: #fff;
+}
+
+.overlay-score-item .val.highlight {
+    color: #34d399;
+}
+
+.overlay-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Cabinet Controls Bar */
+.cabinet-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    background: #090c12;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.virtual-dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.v-btn-row {
+    display: flex;
+    gap: 4px;
+}
+
+.v-btn {
+    width: 36px;
+    height: 36px;
+    background: #1c2331;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #0f141f, 0 4px 6px rgba(0, 0, 0, 0.4);
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.v-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #0f141f;
+    background: #2563eb;
+    color: #fff;
+}
+
+.cabinet-instructions {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    padding: 0 0.5rem;
+}
+
+.controls-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.35rem;
+}
+
+.virtual-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.v-action-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 0 #047857, 0 6px 12px rgba(16, 185, 129, 0.4);
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.v-action-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #047857;
+}
+
+.v-action-btn.action-b {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 4px 0 #b45309, 0 6px 12px rgba(245, 158, 11, 0.4);
+}
+
+.v-action-btn.action-b:active {
+    box-shadow: 0 1px 0 #b45309;
+}
+
+.action-letter {
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.action-lbl {
+    font-size: 0.55rem;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+/* Games Cartridge Selection Grid */
+.arcade-games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.arcade-game-card {
+    background: rgba(18, 23, 33, 0.85);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.arcade-game-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--card-accent, #10b981);
+    opacity: 0.6;
+    transition: opacity 0.25s ease;
+}
+
+.arcade-game-card:hover {
+    border-color: var(--card-accent, #10b981);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.arcade-game-card:hover::before {
+    opacity: 1;
+}
+
+.arcade-game-card.active-cartridge {
+    border-color: var(--card-accent, #10b981);
+    background: rgba(22, 30, 44, 0.95);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+}
+
+.card-top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-game-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+}
+
+.card-nostalgia-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    letter-spacing: 0.03em;
+}
+
+.card-game-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.35rem;
+}
+
+.card-game-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.card-game-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.meta-diff {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.meta-record {
+    color: #34d399;
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.btn-play-cartridge {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-subtle);
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.arcade-game-card:hover .btn-play-cartridge {
+    background: var(--card-accent, #10b981);
+    color: #051410;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Motivation Reel Bridge Banner */
+.arcade-motivation-bridge {
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.12));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.bridge-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 260px;
+}
+
+.bridge-icon {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.bridge-left h4 {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.bridge-left p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+
 

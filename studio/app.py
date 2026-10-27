@@ -487,8 +487,159 @@ def publish_youtube_shorts(filename: str):
         with open(manifest_p, "r", encoding="utf-8") as f:
             meta = json.load(f)
 
-    res = SocialPublisher.generate_youtube_manifest(str(video_p), meta)
-    return res
+ARCADE_CATEGORIES = [
+    {"id": "ALL", "name": "All Games", "icon": "🌟", "desc": "All retro Flash classics"},
+    {"id": "RETRO", "name": "Retro Classics", "icon": "🕹️", "desc": "Golden era arcade nostalgia"},
+    {"id": "ACTION", "name": "Action & Reflex", "icon": "⚡", "desc": "Fast-paced adrenaline rush"},
+    {"id": "PUZZLE", "name": "Puzzle & Logic", "icon": "🧠", "desc": "Brain training & strategic challenges"},
+    {"id": "SKILL", "name": "Skill & Precision", "icon": "🎯", "desc": "Precision timing & physics"},
+]
+
+ARCADE_GAMES = [
+    {
+        "id": "snake",
+        "title": "Cyber Snake 2099",
+        "category": "RETRO",
+        "category_name": "Retro Classics",
+        "icon": "🐍",
+        "badge": "NOKIA & FLASH HIT",
+        "tagline": "Guide the glowing energy serpent across the cyber grid without hitting walls or tail.",
+        "difficulty": "Medium",
+        "controls": "Arrow Keys / WASD / D-Pad",
+        "color": "#10b981",
+        "accent": "#059669",
+        "multiplier": "1.5x"
+    },
+    {
+        "id": "flappy",
+        "title": "Motivation Falcon / Flappy Boost",
+        "category": "ACTION",
+        "category_name": "Action & Reflex",
+        "icon": "🚀",
+        "badge": "MINICLIP REFLEX HIT",
+        "tagline": "Fire thrusters to navigate through doubt pillars and collect discipline fuels.",
+        "difficulty": "Hard",
+        "controls": "Spacebar / Click / Tap to Boost",
+        "color": "#f59e0b",
+        "accent": "#d97706",
+        "multiplier": "2.0x"
+    },
+    {
+        "id": "breakout",
+        "title": "Neon Brick Breaker DX",
+        "category": "SKILL",
+        "category_name": "Skill & Precision",
+        "icon": "🧱",
+        "badge": "ARKANOID DX",
+        "tagline": "Deflect the high-velocity energy sphere to shatter multi-colored neon bricks.",
+        "difficulty": "Medium",
+        "controls": "Mouse Move / Left-Right Arrows / Touch",
+        "color": "#f43f5e",
+        "accent": "#e11d48",
+        "multiplier": "1.8x"
+    },
+    {
+        "id": "matrix2048",
+        "title": "2048 Cyber Matrix",
+        "category": "PUZZLE",
+        "category_name": "Puzzle & Logic",
+        "icon": "🔢",
+        "badge": "LOGIC MASTER",
+        "tagline": "Slide and merge matching number power cells until you reach the 2048 Core.",
+        "difficulty": "Brain Teaser",
+        "controls": "Arrow Keys / Swipe / Virtual D-Pad",
+        "color": "#8b5cf6",
+        "accent": "#7c3aed",
+        "multiplier": "1.2x"
+    },
+    {
+        "id": "asteroids",
+        "title": "Meteor Defender 360",
+        "category": "ACTION",
+        "category_name": "Action & Reflex",
+        "icon": "🛸",
+        "badge": "VECTOR ARCADE 1982",
+        "tagline": "Pilot your vector ship in zero-G, rotate 360° and blast splitting meteors.",
+        "difficulty": "Challenging",
+        "controls": "Left/Right to Turn, Up/W to Thrust, Space to Shoot",
+        "color": "#06b6d4",
+        "accent": "#0891b2",
+        "multiplier": "2.5x"
+    },
+    {
+        "id": "memory",
+        "title": "Cyber Hologram Match",
+        "category": "PUZZLE",
+        "category_name": "Puzzle & Logic",
+        "icon": "💎",
+        "badge": "MIND RETENTION",
+        "tagline": "Flip holographic cards, find identical symbol pairs in minimum moves and time.",
+        "difficulty": "Relaxing",
+        "controls": "Mouse Click / Touch",
+        "color": "#ec4899",
+        "accent": "#db2777",
+        "multiplier": "1.0x"
+    }
+]
+
+class ArcadeScoreSubmission(BaseModel):
+    game_id: str
+    score: int
+    player: str = "Player 1"
+
+@app.get("/api/arcade/games")
+def get_arcade_games():
+    return {
+        "categories": ARCADE_CATEGORIES,
+        "games": ARCADE_GAMES
+    }
+
+@app.get("/api/arcade/scores")
+def get_arcade_scores():
+    scores_file = Config.OUTPUT_DIR / "arcade_scores.json"
+    if scores_file.exists():
+        try:
+            with open(scores_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "snake": {"score": 120, "player": "StoicNinja", "date": "2026-10-28"},
+        "flappy": {"score": 18, "player": "CyberFalcon", "date": "2026-10-28"},
+        "breakout": {"score": 450, "player": "NeonStriker", "date": "2026-10-28"},
+        "matrix2048": {"score": 2048, "player": "MatrixMind", "date": "2026-10-28"},
+        "asteroids": {"score": 850, "player": "VoidPilot", "date": "2026-10-28"},
+        "memory": {"score": 16, "player": "ZenMaster", "date": "2026-10-28"}
+    }
+
+@app.post("/api/arcade/scores")
+def submit_arcade_score(submission: ArcadeScoreSubmission):
+    scores_file = Config.OUTPUT_DIR / "arcade_scores.json"
+    scores = {}
+    if scores_file.exists():
+        try:
+            with open(scores_file, "r", encoding="utf-8") as f:
+                scores = json.load(f)
+        except Exception:
+            scores = {}
+
+    curr = scores.get(submission.game_id, {"score": 0})
+    is_new_high = submission.score > curr.get("score", 0)
+    if is_new_high:
+        scores[submission.game_id] = {
+            "score": submission.score,
+            "player": submission.player,
+            "date": datetime.date.today().isoformat()
+        }
+        with open(scores_file, "w", encoding="utf-8") as f:
+            json.dump(scores, f, indent=2)
+
+    return {
+        "game_id": submission.game_id,
+        "score": submission.score,
+        "is_new_high": is_new_high,
+        "high_score": scores.get(submission.game_id, {}).get("score", submission.score)
+    }
 
 @app.get("/media/{filename}")
 def serve_media(filename: str):

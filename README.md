@@ -51,13 +51,26 @@ An autonomous AI agent and interactive Web Studio that generates daily high-rete
    - Outer glowing energy ring expands and contracts in real-time according to vocal loudness.
    - 42-band symmetric FFT audio spectrum visualizer dancing to narrator speech.
 
-8. **✨ Creator Lab (Custom Characters & Voice Cloning)**:
+8. **🕹️ Retro Flash Games Arcade (Miniclip & Newgrounds Classics)**:
+   - Built-in retro arcade cabinet running 6 classic Flash games in responsive HTML5 Canvas:
+     - 🐍 **Cyber Snake 2099** (*Retro Classics*): Glowing energy viper, speed ramp, particle bursts.
+     - 🚀 **Motivation Falcon / Flappy Boost** (*Action & Reflex*): Thruster boost physics, doubt pillars, discipline stars.
+     - 🧱 **Neon Brick Breaker DX** (*Skill & Precision*): High-velocity orb, glowing paddle, destructible neon brick shatter physics.
+     - 🔢 **2048 Cyber Matrix** (*Puzzle & Logic*): Slide & merge cyber tiles to unlock the 2048 Core.
+     - 🛸 **Meteor Defender 360** (*Action & Reflex*): 360° vector zero-G ship, laser cannon, splitting asteroids.
+     - 💎 **Cyber Hologram Match** (*Puzzle & Logic*): 3D card flips, icon matching combos, and victory fireworks.
+   - **Real-Time 8-Bit Web Audio Synthesizer**: Chimes, jump sweeps, laser sounds, explosion noise bursts, and triumphant fanfares without external audio files.
+   - **CRT Scanlines Filter**: Nostalgic cathode-ray tube scanline simulation overlay.
+   - **Theater Mode**: Expand to full-width arcade cabinet view for distraction-free gaming.
+   - **Discipline & Reflex Story Bridge**: Turn any game high score into an automated, viral motivation reel with one click!
+
+9. **✨ Creator Lab (Custom Characters & Voice Cloning)**:
    - **Upload Custom Character**: Drag & drop any portrait to register a new narrator.
    - **Voice Cloning / Upload**: Instant ElevenLabs voice cloning or local audio reference.
    - **Direct Spoken Narration**: Upload your own spoken audio recording and render a 1080x1920 reel with synchronized subtitles and waveforms!
 
-9. **📱 Interactive Web Studio & Direct Social Publishing**:
-   - Switch between **Story & Motivation Reel** and **3-Keyword Short Movie** studio modes.
+10. **📱 Interactive Web Studio & Direct Social Publishing**:
+   - Switch between **Story & Motivation Reel**, **3-Keyword Short Movie**, and **Retro Flash Arcade** modes.
    - Live iPhone 9:16 simulator player with real-time playback.
    - One-click publishing to Instagram via **Meta Graph API v19.0**, **Buffer API**, **YouTube Shorts Manifest**, or **Make.com / Zapier Webhooks**.
 

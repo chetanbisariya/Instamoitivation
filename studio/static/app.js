@@ -40,8 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mode Switcher Elements
     const modeStoryReelTab = document.getElementById("modeStoryReelTab");
     const modeCinemaTab = document.getElementById("modeCinemaTab");
+    const modeArcadeTab = document.getElementById("modeArcadeTab");
+    const openArcadeBtn = document.getElementById("openArcadeBtn");
     const storyDirectorPanel = document.getElementById("storyDirectorPanel");
     const cinemaDirectorPanel = document.getElementById("cinemaDirectorPanel");
+    const arcadeDirectorPanel = document.getElementById("arcadeDirectorPanel");
 
     // Cinema Elements
     const kw1Input = document.getElementById("kw1Input");
@@ -245,19 +248,53 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Studio Mode Switcher
-    modeStoryReelTab.addEventListener("click", () => {
-        modeStoryReelTab.classList.add("active");
-        modeCinemaTab.classList.remove("active");
-        storyDirectorPanel.style.display = "block";
-        cinemaDirectorPanel.style.display = "none";
-    });
-
-    modeCinemaTab.addEventListener("click", () => {
-        modeCinemaTab.classList.add("active");
+    function switchStudioMode(mode) {
         modeStoryReelTab.classList.remove("active");
-        cinemaDirectorPanel.style.display = "block";
+        modeCinemaTab.classList.remove("active");
+        if (modeArcadeTab) modeArcadeTab.classList.remove("active");
+
         storyDirectorPanel.style.display = "none";
-    });
+        cinemaDirectorPanel.style.display = "none";
+        if (arcadeDirectorPanel) arcadeDirectorPanel.style.display = "none";
+
+        if (mode === "story") {
+            modeStoryReelTab.classList.add("active");
+            storyDirectorPanel.style.display = "block";
+        } else if (mode === "cinema") {
+            modeCinemaTab.classList.add("active");
+            cinemaDirectorPanel.style.display = "block";
+        } else if (mode === "arcade") {
+            if (modeArcadeTab) modeArcadeTab.classList.add("active");
+            if (arcadeDirectorPanel) arcadeDirectorPanel.style.display = "block";
+            if (window.ArcadeStudio && typeof window.ArcadeStudio.onPanelOpened === "function") {
+                window.ArcadeStudio.onPanelOpened();
+            }
+        }
+    }
+    window.switchStudioMode = switchStudioMode;
+
+    window.prefillStoryPrompt = function(topic, promptText, category = "MOTIVATION") {
+        switchStudioMode("story");
+        const promptInput = document.getElementById("customPromptInput");
+        if (promptInput) promptInput.value = promptText;
+        const catTabs = document.querySelectorAll("#categoryTabsContainer .cat-tab");
+        catTabs.forEach(t => {
+            if (t.getAttribute("data-cat") === category) t.click();
+        });
+        storyDirectorPanel.scrollIntoView({ behavior: "smooth" });
+    };
+
+    modeStoryReelTab.addEventListener("click", () => switchStudioMode("story"));
+    modeCinemaTab.addEventListener("click", () => switchStudioMode("cinema"));
+    if (modeArcadeTab) {
+        modeArcadeTab.addEventListener("click", () => switchStudioMode("arcade"));
+    }
+    if (openArcadeBtn) {
+        openArcadeBtn.addEventListener("click", () => {
+            switchStudioMode("arcade");
+            arcadeDirectorPanel.scrollIntoView({ behavior: "smooth" });
+        });
+    }
 
     // Randomize Keywords
     randomizeKeywordsBtn.addEventListener("click", () => {

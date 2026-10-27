@@ -22,6 +22,10 @@
             </div>
         </div>
         <div class="header-right">
+            <button class="btn-ghost" id="openArcadeBtn" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
+                <span class="btn-icon">🕹️</span>
+                Flash Arcade
+            </button>
             <button class="btn-creator-lab" id="openCreatorLabBtn">
                 <span class="btn-sparkle">✨</span>
                 Upload Character & Voice
@@ -88,6 +92,9 @@
                 </button>
                 <button class="mode-tab" id="modeCinemaTab" data-mode="cinema">
                     <span class="mode-icon">🎬</span> 3-Keyword Short Movie <span class="mode-badge-new">NEW</span>
+                </button>
+                <button class="mode-tab" id="modeArcadeTab" data-mode="arcade">
+                    <span class="mode-icon">🕹️</span> Retro Flash Arcade <span class="mode-badge-new" style="background: linear-gradient(135deg, #10b981, #06b6d4);">PLAYABLE</span>
                 </button>
             </div>
 
@@ -266,6 +273,139 @@
                         <div class="progress-bar-fill progress-bar-cinema" id="movieProgressBarFill"></div>
                     </div>
                     <p class="progress-desc" id="movieProgressDesc">Synthesizing narrative arc across 3 acts with dynamic keyword illumination...</p>
+                </div>
+            </div>
+
+            <!-- Panel 3: Retro Flash Games Arcade -->
+            <div class="card generator-card arcade-card" id="arcadeDirectorPanel" style="display: none;">
+                <div class="card-header arcade-header">
+                    <div>
+                        <h2>🕹️ Retro Flash Games Arcade</h2>
+                        <p class="card-subtitle">Golden-era Flash & Miniclip classics — 100% playable, real-time 8-bit sound synth & CRT scanlines</p>
+                    </div>
+                    <div class="arcade-header-badges">
+                        <span class="badge-arcade" id="arcadeActiveGameBadge">CYBER SNAKE 2099</span>
+                        <button class="btn-theater-toggle" id="toggleArcadeTheaterBtn" title="Toggle Full Width Theater View">⛶ Theater Mode</button>
+                    </div>
+                </div>
+
+                <!-- 1. Arcade Categories -->
+                <div class="form-group">
+                    <label class="form-label">1. Select Game Category</label>
+                    <div class="arcade-category-tabs" id="arcadeCategoryTabs">
+                        <button class="arcade-cat-tab active" data-arcade-cat="ALL">🌟 All Games (6)</button>
+                        <button class="arcade-cat-tab" data-arcade-cat="RETRO">🕹️ Retro Classics (3)</button>
+                        <button class="arcade-cat-tab" data-arcade-cat="ACTION">⚡ Action & Reflex (2)</button>
+                        <button class="arcade-cat-tab" data-arcade-cat="PUZZLE">🧠 Puzzle & Logic (2)</button>
+                        <button class="arcade-cat-tab" data-arcade-cat="SKILL">🎯 Skill & Precision (2)</button>
+                    </div>
+                </div>
+
+                <!-- 2. The Active Arcade Cabinet -->
+                <div class="arcade-cabinet-wrapper" id="arcadeCabinetWrapper">
+                    <div class="arcade-cabinet">
+                        <!-- Cabinet Marquee Top -->
+                        <div class="cabinet-marquee">
+                            <div class="marquee-brand">
+                                <span class="marquee-dot"></span>
+                                <span class="marquee-title" id="cabinetGameTitle">CYBER SNAKE 2099</span>
+                                <span class="marquee-badge" id="cabinetNostalgiaBadge">NOKIA & FLASH HIT</span>
+                            </div>
+                            <div class="marquee-stats">
+                                <div class="stat-pill"><span class="stat-lbl">SCORE</span> <span class="stat-val" id="arcadeCurrentScore">0</span></div>
+                                <div class="stat-pill highlight"><span class="stat-lbl">BEST</span> <span class="stat-val" id="arcadeHighScore">120</span></div>
+                            </div>
+                            <div class="marquee-tools">
+                                <button class="btn-marquee-tool" id="arcadeSoundToggleBtn" title="Toggle 8-bit Synth Sound">🔊 Sound: ON</button>
+                                <button class="btn-marquee-tool" id="arcadeCrtToggleBtn" title="Toggle CRT Scanlines">📺 CRT: ON</button>
+                                <button class="btn-marquee-tool" id="arcadePauseBtn" title="Pause Game (P)">⏸️ Pause</button>
+                                <button class="btn-marquee-tool" id="arcadeRestartBtn" title="Restart Game">🔄 Restart</button>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Screen Frame -->
+                        <div class="arcade-screen-frame" id="arcadeScreenFrame">
+                            <canvas id="arcadeGameCanvas" width="640" height="480"></canvas>
+                            <div class="crt-scanlines active" id="arcadeCrtOverlay"></div>
+
+                            <!-- Game Overlay Dialog (Start / Paused / Game Over) -->
+                            <div class="arcade-overlay" id="arcadeOverlay" style="display: flex;">
+                                <div class="overlay-modal">
+                                    <div class="overlay-icon" id="overlayIcon">🐍</div>
+                                    <h3 class="overlay-title" id="overlayTitle">CYBER SNAKE 2099</h3>
+                                    <p class="overlay-subtitle" id="overlaySubtitle">Arrow keys or WASD to navigate. Eat glowing energy orbs without crashing into walls or your own tail!</p>
+                                    <div class="overlay-score-box" id="overlayScoreBox" style="display: none;">
+                                        <div class="overlay-score-item">
+                                            <span class="lbl">FINAL SCORE</span>
+                                            <span class="val" id="overlayFinalScore">0</span>
+                                        </div>
+                                        <div class="overlay-score-item">
+                                            <span class="lbl">HIGH SCORE</span>
+                                            <span class="val highlight" id="overlayHighScore">120</span>
+                                        </div>
+                                    </div>
+                                    <div class="overlay-buttons">
+                                        <button class="btn-primary" id="overlayPlayBtn">
+                                            <span class="btn-icon">▶</span>
+                                            <span id="overlayPlayBtnText">START GAME / INSERT COIN (SPACE)</span>
+                                        </button>
+                                        <button class="btn-accent" id="overlayMakeReelBtn" style="display: none; background: linear-gradient(135deg, #f59e0b, #ef4444);">
+                                            🎬 Turn Score into Motivation Reel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cabinet Virtual Controls Bar (Touch / Mobile Friendly) -->
+                        <div class="cabinet-controls-bar">
+                            <div class="virtual-dpad">
+                                <button class="v-btn v-up" id="vbtnUp" aria-label="Up">▲</button>
+                                <div class="v-btn-row">
+                                    <button class="v-btn v-left" id="vbtnLeft" aria-label="Left">◀</button>
+                                    <button class="v-btn v-down" id="vbtnDown" aria-label="Down">▼</button>
+                                    <button class="v-btn v-right" id="vbtnRight" aria-label="Right">▶</button>
+                                </div>
+                            </div>
+                            <div class="cabinet-instructions">
+                                <span class="controls-tag">KEYBOARD & TOUCH CONTROLS</span>
+                                <p id="cabinetControlsText">Use <strong>Arrow Keys</strong> or <strong>W, A, S, D</strong>. Press <strong>Spacebar</strong> to Start / Boost. Press <strong>P</strong> to Pause.</p>
+                            </div>
+                            <div class="virtual-actions">
+                                <button class="v-action-btn" id="vbtnActionA">
+                                    <span class="action-letter">A</span>
+                                    <span class="action-lbl" id="vbtnActionLabel">SPACE</span>
+                                </button>
+                                <button class="v-action-btn action-b" id="vbtnActionB">
+                                    <span class="action-letter">B</span>
+                                    <span class="action-lbl">BOOST</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Games Selection Grid -->
+                <div class="form-group" style="margin-top: 1.75rem;">
+                    <div class="label-with-action">
+                        <label class="form-label">2. Flash Game Cartridges</label>
+                        <span class="catalog-hint">Click any cartridge to insert into the arcade cabinet</span>
+                    </div>
+                    <div class="arcade-games-grid" id="arcadeGamesGrid"></div>
+                </div>
+
+                <!-- 4. Turn Score into Motivation Reel Banner -->
+                <div class="arcade-motivation-bridge">
+                    <div class="bridge-left">
+                        <span class="bridge-icon">⚡</span>
+                        <div>
+                            <h4>Discipline & Reflex Story Bridge</h4>
+                            <p>Channel gaming grit and resilience into viral content. Convert your high score or triumph run into an automated motivation story reel!</p>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" id="bridgeCreateReelBtn">
+                        ✨ Create Gamer Mindset Reel
+                    </button>
                 </div>
             </div>
 
@@ -581,6 +721,7 @@
         </div>
     </div>
 
+    <script src="arcade.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
